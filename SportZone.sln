@@ -1,11 +1,10 @@
-
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36518.9 d17.14
+VisualStudioVersion = 17.14.36518.9
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SportZone", "SportZone\SportZone.csproj", "{280F0B73-8860-4B0F-88BD-B8192817E6FE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SportZone.Tests", "SportZone.Tests\SportZone.Tests.csproj", "{A1B2C3D4-5E6F-7G8H-9I0J-K1L2M3N4O5P6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SportZone.Tests", "SportZone.Tests\SportZone.Tests.csproj", "{FFEC280A-B232-41E8-8AEE-BC810E3247D9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +16,10 @@ Global
 		{280F0B73-8860-4B0F-88BD-B8192817E6FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{280F0B73-8860-4B0F-88BD-B8192817E6FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{280F0B73-8860-4B0F-88BD-B8192817E6FE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A1B2C3D4-5E6F-7G8H-9I0J-K1L2M3N4O5P6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A1B2C3D4-5E6F-7G8H-9I0J-K1L2M3N4O5P6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A1B2C3D4-5E6F-7G8H-9I0J-K1L2M3N4O5P6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A1B2C3D4-5E6F-7G8H-9I0J-K1L2M3N4O5P6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FFEC280A-B232-41E8-8AEE-BC810E3247D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FFEC280A-B232-41E8-8AEE-BC810E3247D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FFEC280A-B232-41E8-8AEE-BC810E3247D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FFEC280A-B232-41E8-8AEE-BC810E3247D9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
