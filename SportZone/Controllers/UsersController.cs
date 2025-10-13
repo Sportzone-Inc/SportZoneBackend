@@ -18,6 +18,11 @@ public class UsersController : ControllerBase
         _logger = logger;
     }
 
+    /// <summary>
+    /// Maak een nieuwe gebruiker aan
+    /// </summary>
+    /// <param name="createUserDto">Gebruiker gegevens</param>
+    /// <returns>De aangemaakte gebruiker</returns>
     [HttpPost]
     public async Task<ActionResult<UserResponseDto>> CreateUser([FromBody] CreateUserDto createUserDto)
     {
@@ -47,10 +52,15 @@ public class UsersController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating user");
-            return StatusCode(500, "An error occurred while creating the user");
+            return StatusCode(500, "Er is een fout opgetreden bij het aanmaken van de gebruiker");
         }
     }
 
+    /// <summary>
+    /// Haal een gebruiker op via ID
+    /// </summary>
+    /// <param name="id">Gebruiker ID</param>
+    /// <returns>Gebruiker gegevens</returns>
     [HttpGet("{id}")]
     public async Task<ActionResult<UserResponseDto>> GetUserById(string id)
     {
@@ -58,7 +68,7 @@ public class UsersController : ControllerBase
         
         if (user == null)
         {
-            return NotFound($"User with ID {id} not found");
+            return NotFound($"Gebruiker met ID {id} niet gevonden");
         }
 
         var response = new UserResponseDto
@@ -73,6 +83,10 @@ public class UsersController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Haal alle gebruikers op
+    /// </summary>
+    /// <returns>Lijst van alle gebruikers</returns>
     [HttpGet]
     public async Task<ActionResult<IEnumerable<UserResponseDto>>> GetAllUsers()
     {
@@ -90,6 +104,11 @@ public class UsersController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Update een gebruiker
+    /// </summary>
+    /// <param name="id">Gebruiker ID</param>
+    /// <param name="updateUserDto">Bijgewerkte gegevens</param>
     [HttpPut("{id}")]
     public async Task<ActionResult> UpdateUser(string id, [FromBody] UpdateUserDto updateUserDto)
     {
@@ -97,7 +116,7 @@ public class UsersController : ControllerBase
         
         if (existingUser == null)
         {
-            return NotFound($"User with ID {id} not found");
+            return NotFound($"Gebruiker met ID {id} niet gevonden");
         }
 
         existingUser.Email = updateUserDto.Email ?? existingUser.Email;
@@ -113,12 +132,16 @@ public class UsersController : ControllerBase
 
         if (!result)
         {
-            return StatusCode(500, "Failed to update user");
+            return StatusCode(500, "Gebruiker bijwerken mislukt");
         }
 
         return NoContent();
     }
 
+    /// <summary>
+    /// Verwijder een gebruiker
+    /// </summary>
+    /// <param name="id">Gebruiker ID</param>
     [HttpDelete("{id}")]
     public async Task<ActionResult> DeleteUser(string id)
     {
@@ -126,12 +149,17 @@ public class UsersController : ControllerBase
 
         if (!result)
         {
-            return NotFound($"User with ID {id} not found");
+            return NotFound($"Gebruiker met ID {id} niet gevonden");
         }
 
         return NoContent();
     }
 
+    /// <summary>
+    /// Log in met email en wachtwoord
+    /// </summary>
+    /// <param name="loginDto">Login gegevens</param>
+    /// <returns>Gebruiker gegevens bij succesvolle login</returns>
     [HttpPost("login")]
     public async Task<ActionResult<UserResponseDto>> Login([FromBody] LoginDto loginDto)
     {
@@ -139,7 +167,7 @@ public class UsersController : ControllerBase
 
         if (!isValid)
         {
-            return Unauthorized("Invalid email or password");
+            return Unauthorized("Ongeldige email of wachtwoord");
         }
 
         var user = await _userService.GetUserByEmailAsync(loginDto.Email);
