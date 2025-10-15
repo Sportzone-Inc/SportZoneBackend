@@ -12,7 +12,7 @@ namespace SportZone.Tests.Services
     public class AuthenticationServiceTests
     {
         private Mock<IUserRepository> _mockUserRepository;
-        private Mock<IPasswordHasher> _mockPasswordHasher;
+        private Mock<IPassworder> _mockPassworder;
         private Mock<IConfiguration> _mockConfiguration;
         private AuthenticationService _authenticationService;
 
@@ -20,7 +20,7 @@ namespace SportZone.Tests.Services
         public void Setup()
         {
             _mockUserRepository = new Mock<IUserRepository>();
-            _mockPasswordHasher = new Mock<IPasswordHasher>();
+            _mockPassworder = new Mock<IPassworder>();
             _mockConfiguration = new Mock<IConfiguration>();
 
             // Setup configuration mock
@@ -34,7 +34,7 @@ namespace SportZone.Tests.Services
 
             _authenticationService = new AuthenticationService(
                 _mockUserRepository.Object,
-                _mockPasswordHasher.Object,
+                _mockPassworder.Object,
                 _mockConfiguration.Object
             );
         }
@@ -51,10 +51,8 @@ namespace SportZone.Tests.Services
             {
                 Id = "1",
                 Username = username,
-                PasswordHash = hashedPassword,
+                Password = hashedPassword,
                 Email = "admin@sportzone.com",
-                FirstName = "Admin",
-                LastName = "User",
                 Name = "Admin User"
             };
 
@@ -62,7 +60,7 @@ namespace SportZone.Tests.Services
                 .Setup(x => x.GetByUsernameAsync(username))
                 .ReturnsAsync(user);
             
-            _mockPasswordHasher
+            _mockPassworder
                 .Setup(x => x.VerifyPassword(password, hashedPassword))
                 .Returns(true);
 
@@ -72,7 +70,7 @@ namespace SportZone.Tests.Services
             // Assert
             Assert.That(result, Is.True);
             _mockUserRepository.Verify(x => x.GetByUsernameAsync(username), Times.Once);
-            _mockPasswordHasher.Verify(x => x.VerifyPassword(password, hashedPassword), Times.Once);
+            _mockPassworder.Verify(x => x.VerifyPassword(password, hashedPassword), Times.Once);
         }
 
         [Test]
@@ -92,7 +90,7 @@ namespace SportZone.Tests.Services
             // Assert
             Assert.That(result, Is.False);
             _mockUserRepository.Verify(x => x.GetByUsernameAsync(username), Times.Once);
-            _mockPasswordHasher.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            _mockPassworder.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
         }
 
         [Test]
@@ -107,10 +105,8 @@ namespace SportZone.Tests.Services
             {
                 Id = "1",
                 Username = username,
-                PasswordHash = hashedPassword,
+                Password = hashedPassword,
                 Email = "admin@sportzone.com",
-                FirstName = "Admin",
-                LastName = "User",
                 Name = "Admin User"
             };
 
@@ -118,7 +114,7 @@ namespace SportZone.Tests.Services
                 .Setup(x => x.GetByUsernameAsync(username))
                 .ReturnsAsync(user);
             
-            _mockPasswordHasher
+            _mockPassworder
                 .Setup(x => x.VerifyPassword(password, hashedPassword))
                 .Returns(false);
 
@@ -128,7 +124,7 @@ namespace SportZone.Tests.Services
             // Assert
             Assert.That(result, Is.False);
             _mockUserRepository.Verify(x => x.GetByUsernameAsync(username), Times.Once);
-            _mockPasswordHasher.Verify(x => x.VerifyPassword(password, hashedPassword), Times.Once);
+            _mockPassworder.Verify(x => x.VerifyPassword(password, hashedPassword), Times.Once);
         }
 
         [Test]
@@ -144,7 +140,7 @@ namespace SportZone.Tests.Services
             // Assert
             Assert.That(result, Is.False);
             _mockUserRepository.Verify(x => x.GetByUsernameAsync(It.IsAny<string>()), Times.Never);
-            _mockPasswordHasher.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            _mockPassworder.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
         }
 
         [Test]
@@ -160,7 +156,7 @@ namespace SportZone.Tests.Services
             // Assert
             Assert.That(result, Is.False);
             _mockUserRepository.Verify(x => x.GetByUsernameAsync(It.IsAny<string>()), Times.Never);
-            _mockPasswordHasher.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            _mockPassworder.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
         }
 
         [Test]
@@ -176,7 +172,7 @@ namespace SportZone.Tests.Services
             // Assert
             Assert.That(result, Is.False);
             _mockUserRepository.Verify(x => x.GetByUsernameAsync(It.IsAny<string>()), Times.Never);
-            _mockPasswordHasher.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            _mockPassworder.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
         }
 
         [Test]
@@ -192,11 +188,11 @@ namespace SportZone.Tests.Services
             // Assert
             Assert.That(result, Is.False);
             _mockUserRepository.Verify(x => x.GetByUsernameAsync(It.IsAny<string>()), Times.Never);
-            _mockPasswordHasher.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            _mockPassworder.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
         }
 
         [Test]
-        public async Task AuthenticateAsync_WithUserHavingNullPasswordHash_ReturnsFalse()
+        public async Task AuthenticateAsync_WithUserHavingNullPassword_ReturnsFalse()
         {
             // Arrange
             var username = "admin";
@@ -206,10 +202,8 @@ namespace SportZone.Tests.Services
             {
                 Id = "1",
                 Username = username,
-                PasswordHash = null!,
+                Password = null!,
                 Email = "admin@sportzone.com",
-                FirstName = "Admin",
-                LastName = "User",
                 Name = "Admin User"
             };
 
@@ -223,11 +217,11 @@ namespace SportZone.Tests.Services
             // Assert
             Assert.That(result, Is.False);
             _mockUserRepository.Verify(x => x.GetByUsernameAsync(username), Times.Once);
-            _mockPasswordHasher.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            _mockPassworder.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
         }
 
         [Test]
-        public async Task AuthenticateAsync_WithUserHavingEmptyPasswordHash_ReturnsFalse()
+        public async Task AuthenticateAsync_WithUserHavingEmptyPassword_ReturnsFalse()
         {
             // Arrange
             var username = "admin";
@@ -237,10 +231,8 @@ namespace SportZone.Tests.Services
             {
                 Id = "1",
                 Username = username,
-                PasswordHash = "",
+                Password = "",
                 Email = "admin@sportzone.com",
-                FirstName = "Admin",
-                LastName = "User",
                 Name = "Admin User"
             };
 
@@ -254,7 +246,7 @@ namespace SportZone.Tests.Services
             // Assert
             Assert.That(result, Is.False);
             _mockUserRepository.Verify(x => x.GetByUsernameAsync(username), Times.Once);
-            _mockPasswordHasher.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            _mockPassworder.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
         }
 
         [Test]

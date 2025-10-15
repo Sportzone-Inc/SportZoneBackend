@@ -48,13 +48,13 @@ namespace SportZone.Authentication
             }
 
             // Check if password hash exists
-            if (string.IsNullOrWhiteSpace(user.PasswordHash))
+            if (string.IsNullOrWhiteSpace(user.Password))
             {
                 return false;
             }
 
             // Verify password
-            return _passwordHasher.VerifyPassword(password, user.PasswordHash);
+            return _passwordHasher.VerifyPassword(password, user.Password);
         }
 
         /// <summary>

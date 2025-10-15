@@ -34,6 +34,11 @@ public class UserRepository : IUserRepository
         return await _usersCollection.Find(x => x.Email == email).FirstOrDefaultAsync();
     }
 
+    public async Task<User?> GetByUsernameAsync(string username)
+    {
+        return await _usersCollection.Find(x => x.Username == username).FirstOrDefaultAsync();
+    }
+
     public async Task<IEnumerable<User>> GetAllAsync()
     {
         return await _usersCollection.Find(_ => true).ToListAsync();
