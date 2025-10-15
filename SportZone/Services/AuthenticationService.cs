@@ -31,13 +31,28 @@ namespace SportZone.Services
         /// </summary>
         public async Task<bool> AuthenticateAsync(string username, string password)
         {
+            // Validate input parameters
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+            {
+                return false;
+            }
+
+            // Get user from repository
             var user = await _userRepository.GetByUsernameAsync(username);
             
+            // Check if user exists
             if (user == null)
             {
                 return false;
             }
 
+            // Check if password hash exists
+            if (string.IsNullOrWhiteSpace(user.PasswordHash))
+            {
+                return false;
+            }
+
+            // Verify password
             return _passwordHasher.VerifyPassword(password, user.PasswordHash);
         }
 
