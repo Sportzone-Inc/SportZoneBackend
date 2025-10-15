@@ -3,6 +3,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using SportZone.Authentication;
 using SportZone.Configuration;
 using SportZone.Extensions;
 using SportZone.Repositories;

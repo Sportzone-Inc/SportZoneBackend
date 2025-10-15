@@ -21,6 +21,10 @@ public class User
     [BsonRequired]
     public string Name { get; set; } = string.Empty;
 
+    [BsonElement("name")]
+    [BsonRequired]
+    public string Username { get; set; } = string.Empty;
+
     [BsonElement("preferredSport")]
     public string? PreferredSport { get; set; }
 

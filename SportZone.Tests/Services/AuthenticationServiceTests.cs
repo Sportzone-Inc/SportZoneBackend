@@ -4,6 +4,7 @@ using SportZone.Services;
 using SportZone.Repositories;
 using SportZone.Models;
 using Microsoft.Extensions.Configuration;
+using SportZone.Authentication;
 
 namespace SportZone.Tests.Services
 {

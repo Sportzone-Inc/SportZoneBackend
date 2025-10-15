@@ -44,9 +44,7 @@ namespace SportZone.Services
                     {
                         Username = "admin",
                         Email = "admin@sportzone.com",
-                        PasswordHash = _passwordHasher.HashPassword("passtimadmin"),
-                        FirstName = "Admin",
-                        LastName = "User",
+                        Password = _passwordHasher.HashPassword("passtimadmin"),
                         Name = "Admin User",
                         PreferredSport = null,
                         CreatedAt = DateTime.UtcNow,

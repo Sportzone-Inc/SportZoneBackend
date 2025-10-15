@@ -4,8 +4,9 @@ using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using SportZone.Repositories;
+using SportZone.Services;
 
-namespace SportZone.Services
+namespace SportZone.Authentication
 {
     /// <summary>
     /// Service voor authenticatie functies
