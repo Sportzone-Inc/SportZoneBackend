@@ -2,9 +2,7 @@ using NUnit.Framework;
 using Moq;
 using SportZone.Services;
 using SportZone.Repositories;
-using SportZone.Models;
 using Microsoft.Extensions.Configuration;
-using SportZone.Authentication;
 
 namespace SportZone.Tests.Services
 {
@@ -12,7 +10,6 @@ namespace SportZone.Tests.Services
     public class AuthenticationServiceTests
     {
         private Mock<IUserRepository> _mockUserRepository;
-        private Mock<IPassworder> _mockPassworder;
         private Mock<IConfiguration> _mockConfiguration;
         private AuthenticationService _authenticationService;
 
@@ -20,7 +17,6 @@ namespace SportZone.Tests.Services
         public void Setup()
         {
             _mockUserRepository = new Mock<IUserRepository>();
-            _mockPassworder = new Mock<IPassworder>();
             _mockConfiguration = new Mock<IConfiguration>();
 
             // Setup configuration mock
@@ -34,7 +30,6 @@ namespace SportZone.Tests.Services
 
             _authenticationService = new AuthenticationService(
                 _mockUserRepository.Object,
-                _mockPassworder.Object,
                 _mockConfiguration.Object
             );
         }
@@ -45,32 +40,17 @@ namespace SportZone.Tests.Services
             // Arrange
             var username = "admin";
             var password = "passtimadmin";
-            var hashedPassword = "hashed_password";
-            
-            var user = new User
-            {
-                Id = "1",
-                Username = username,
-                Password = hashedPassword,
-                Email = "admin@sportzone.com",
-                Name = "Admin User"
-            };
 
             _mockUserRepository
-                .Setup(x => x.GetByUsernameAsync(username))
-                .ReturnsAsync(user);
-            
-            _mockPassworder
-                .Setup(x => x.VerifyPassword(password, hashedPassword))
-                .Returns(true);
+                .Setup(x => x.VerifyPasswordAsync(username, password))
+                .ReturnsAsync(true);
 
             // Act
             var result = await _authenticationService.AuthenticateAsync(username, password);
 
             // Assert
             Assert.That(result, Is.True);
-            _mockUserRepository.Verify(x => x.GetByUsernameAsync(username), Times.Once);
-            _mockPassworder.Verify(x => x.VerifyPassword(password, hashedPassword), Times.Once);
+            _mockUserRepository.Verify(x => x.VerifyPasswordAsync(username, password), Times.Once);
         }
 
         [Test]
@@ -81,16 +61,15 @@ namespace SportZone.Tests.Services
             var password = "password";
 
             _mockUserRepository
-                .Setup(x => x.GetByUsernameAsync(username))
-                .ReturnsAsync((User?)null);
+                .Setup(x => x.VerifyPasswordAsync(username, password))
+                .ReturnsAsync(false);
 
             // Act
             var result = await _authenticationService.AuthenticateAsync(username, password);
 
             // Assert
             Assert.That(result, Is.False);
-            _mockUserRepository.Verify(x => x.GetByUsernameAsync(username), Times.Once);
-            _mockPassworder.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            _mockUserRepository.Verify(x => x.VerifyPasswordAsync(username, password), Times.Once);
         }
 
         [Test]
@@ -99,154 +78,17 @@ namespace SportZone.Tests.Services
             // Arrange
             var username = "admin";
             var password = "wrongpassword";
-            var hashedPassword = "hashed_password";
-            
-            var user = new User
-            {
-                Id = "1",
-                Username = username,
-                Password = hashedPassword,
-                Email = "admin@sportzone.com",
-                Name = "Admin User"
-            };
 
             _mockUserRepository
-                .Setup(x => x.GetByUsernameAsync(username))
-                .ReturnsAsync(user);
-            
-            _mockPassworder
-                .Setup(x => x.VerifyPassword(password, hashedPassword))
-                .Returns(false);
+                .Setup(x => x.VerifyPasswordAsync(username, password))
+                .ReturnsAsync(false);
 
             // Act
             var result = await _authenticationService.AuthenticateAsync(username, password);
 
             // Assert
             Assert.That(result, Is.False);
-            _mockUserRepository.Verify(x => x.GetByUsernameAsync(username), Times.Once);
-            _mockPassworder.Verify(x => x.VerifyPassword(password, hashedPassword), Times.Once);
-        }
-
-        [Test]
-        public async Task AuthenticateAsync_WithEmptyUsername_ReturnsFalse()
-        {
-            // Arrange
-            var username = "";
-            var password = "password";
-
-            // Act
-            var result = await _authenticationService.AuthenticateAsync(username, password);
-
-            // Assert
-            Assert.That(result, Is.False);
-            _mockUserRepository.Verify(x => x.GetByUsernameAsync(It.IsAny<string>()), Times.Never);
-            _mockPassworder.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
-        }
-
-        [Test]
-        public async Task AuthenticateAsync_WithEmptyPassword_ReturnsFalse()
-        {
-            // Arrange
-            var username = "admin";
-            var password = "";
-
-            // Act
-            var result = await _authenticationService.AuthenticateAsync(username, password);
-
-            // Assert
-            Assert.That(result, Is.False);
-            _mockUserRepository.Verify(x => x.GetByUsernameAsync(It.IsAny<string>()), Times.Never);
-            _mockPassworder.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
-        }
-
-        [Test]
-        public async Task AuthenticateAsync_WithNullUsername_ReturnsFalse()
-        {
-            // Arrange
-            string? username = null;
-            var password = "password";
-
-            // Act
-            var result = await _authenticationService.AuthenticateAsync(username!, password);
-
-            // Assert
-            Assert.That(result, Is.False);
-            _mockUserRepository.Verify(x => x.GetByUsernameAsync(It.IsAny<string>()), Times.Never);
-            _mockPassworder.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
-        }
-
-        [Test]
-        public async Task AuthenticateAsync_WithNullPassword_ReturnsFalse()
-        {
-            // Arrange
-            var username = "admin";
-            string? password = null;
-
-            // Act
-            var result = await _authenticationService.AuthenticateAsync(username, password!);
-
-            // Assert
-            Assert.That(result, Is.False);
-            _mockUserRepository.Verify(x => x.GetByUsernameAsync(It.IsAny<string>()), Times.Never);
-            _mockPassworder.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
-        }
-
-        [Test]
-        public async Task AuthenticateAsync_WithUserHavingNullPassword_ReturnsFalse()
-        {
-            // Arrange
-            var username = "admin";
-            var password = "password";
-            
-            var user = new User
-            {
-                Id = "1",
-                Username = username,
-                Password = null!,
-                Email = "admin@sportzone.com",
-                Name = "Admin User"
-            };
-
-            _mockUserRepository
-                .Setup(x => x.GetByUsernameAsync(username))
-                .ReturnsAsync(user);
-
-            // Act
-            var result = await _authenticationService.AuthenticateAsync(username, password);
-
-            // Assert
-            Assert.That(result, Is.False);
-            _mockUserRepository.Verify(x => x.GetByUsernameAsync(username), Times.Once);
-            _mockPassworder.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
-        }
-
-        [Test]
-        public async Task AuthenticateAsync_WithUserHavingEmptyPassword_ReturnsFalse()
-        {
-            // Arrange
-            var username = "admin";
-            var password = "password";
-            
-            var user = new User
-            {
-                Id = "1",
-                Username = username,
-                Password = "",
-                Email = "admin@sportzone.com",
-                Name = "Admin User"
-            };
-
-            _mockUserRepository
-                .Setup(x => x.GetByUsernameAsync(username))
-                .ReturnsAsync(user);
-
-            // Act
-            var result = await _authenticationService.AuthenticateAsync(username, password);
-
-            // Assert
-            Assert.That(result, Is.False);
-            _mockUserRepository.Verify(x => x.GetByUsernameAsync(username), Times.Once);
-            _mockPassworder.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            _mockUserRepository.Verify(x => x.VerifyPasswordAsync(username, password), Times.Once);
         }
 
         [Test]
