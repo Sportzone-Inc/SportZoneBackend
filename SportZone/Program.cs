@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using SportZone.Configuration;
+using SportZone.Extensions;
 using SportZone.Repositories;
 using SportZone.Services;
 
@@ -25,6 +26,7 @@ builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ISportActivityService, SportActivityService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+builder.Services.AddScoped<DatabaseSeeder>();
 
 // Configure JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -109,6 +111,9 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Seed the database
+await app.SeedDatabaseAsync();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
