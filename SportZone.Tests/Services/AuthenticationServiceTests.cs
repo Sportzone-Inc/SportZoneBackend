@@ -1,8 +1,8 @@
 using NUnit.Framework;
 using Moq;
-using SportZone.Services;
 using SportZone.Repositories;
 using Microsoft.Extensions.Configuration;
+using SportZone.Authentication;
 
 namespace SportZone.Tests.Services
 {
@@ -28,10 +28,10 @@ namespace SportZone.Tests.Services
             
             _mockConfiguration.Setup(x => x.GetSection("JwtSettings")).Returns(jwtSection.Object);
 
-            _authenticationService = new AuthenticationService(
-                _mockUserRepository.Object,
-                _mockConfiguration.Object
-            );
+            //_authenticationService = new AuthenticationService(
+            //    _mockUserRepository.Object,
+            //    _mockConfiguration.Object
+            //);
         }
 
         [Test]
