@@ -2,18 +2,21 @@ using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using SportZone.Configuration;
 using SportZone.Models;
+using SportZone.Services;
 
 namespace SportZone.Repositories;
 
 public class UserRepository : IUserRepository
 {
     private readonly IMongoCollection<User> _usersCollection;
+    private readonly IPasswordHasher _passwordHasher;
 
-    public UserRepository(IOptions<MongoDbSettings> mongoDbSettings)
+    public UserRepository(IOptions<MongoDbSettings> mongoDbSettings, IPasswordHasher passwordHasher)
     {
         var mongoClient = new MongoClient(mongoDbSettings.Value.ConnectionString);
         var mongoDatabase = mongoClient.GetDatabase(mongoDbSettings.Value.DatabaseName);
         _usersCollection = mongoDatabase.GetCollection<User>(mongoDbSettings.Value.UsersCollectionName);
+        _passwordHasher = passwordHasher;
     }
 
     public async Task<User> CreateAsync(User user)
@@ -55,5 +58,32 @@ public class UserRepository : IUserRepository
     {
         var result = await _usersCollection.DeleteOneAsync(x => x.Id == id);
         return result.IsAcknowledged && result.DeletedCount > 0;
+    }
+
+    public async Task<bool> VerifyPasswordAsync(string username, string password)
+    {
+        // Validate input parameters
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+        {
+            return false;
+        }
+
+        // Get user from database
+        var user = await GetByUsernameAsync(username);
+        
+        // Check if user exists
+        if (user == null)
+        {
+            return false;
+        }
+
+        // Check if password hash exists
+        if (string.IsNullOrWhiteSpace(user.PasswordHash))
+        {
+            return false;
+        }
+
+        // Verify password
+        return _passwordHasher.VerifyPassword(password, user.PasswordHash);
     }
 }
