@@ -63,15 +63,3 @@ public class SportActivity
     [BsonElement("updatedAt")]
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
-
-public enum SportType
-{
-    Basketball,
-    Running,
-    Football,
-    Tennis,
-    Swimming,
-    Cycling,
-    Volleyball,
-    Other
-}
