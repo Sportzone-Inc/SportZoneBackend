@@ -3,7 +3,7 @@ using Moq;
 using SportZone.Services;
 using SportZone.Repositories;
 using SportZone.Models;
-using SportZone.DTOs;
+using Microsoft.Extensions.Configuration;
 
 namespace SportZone.Tests.Services
 {
@@ -12,6 +12,7 @@ namespace SportZone.Tests.Services
     {
         private Mock<IUserRepository> _mockUserRepository;
         private Mock<IPasswordHasher> _mockPasswordHasher;
+        private Mock<IConfiguration> _mockConfiguration;
         private AuthenticationService _authenticationService;
 
         [SetUp]
@@ -19,9 +20,21 @@ namespace SportZone.Tests.Services
         {
             _mockUserRepository = new Mock<IUserRepository>();
             _mockPasswordHasher = new Mock<IPasswordHasher>();
+            _mockConfiguration = new Mock<IConfiguration>();
+
+            // Setup configuration mock
+            var jwtSection = new Mock<IConfigurationSection>();
+            jwtSection.Setup(x => x["SecretKey"]).Returns("Test-Secret-Key-For-JWT-Testing-Minimum-32-Characters-Long");
+            jwtSection.Setup(x => x["Issuer"]).Returns("TestIssuer");
+            jwtSection.Setup(x => x["Audience"]).Returns("TestAudience");
+            jwtSection.Setup(x => x["ExpiryMinutes"]).Returns("60");
+            
+            _mockConfiguration.Setup(x => x.GetSection("JwtSettings")).Returns(jwtSection.Object);
+
             _authenticationService = new AuthenticationService(
                 _mockUserRepository.Object,
-                _mockPasswordHasher.Object
+                _mockPasswordHasher.Object,
+                _mockConfiguration.Object
             );
         }
 
@@ -40,7 +53,8 @@ namespace SportZone.Tests.Services
                 PasswordHash = hashedPassword,
                 Email = "admin@sportzone.com",
                 FirstName = "Admin",
-                LastName = "User"
+                LastName = "User",
+                Name = "Admin User"
             };
 
             _mockUserRepository
@@ -95,7 +109,8 @@ namespace SportZone.Tests.Services
                 PasswordHash = hashedPassword,
                 Email = "admin@sportzone.com",
                 FirstName = "Admin",
-                LastName = "User"
+                LastName = "User",
+                Name = "Admin User"
             };
 
             _mockUserRepository
@@ -113,6 +128,147 @@ namespace SportZone.Tests.Services
             Assert.That(result, Is.False);
             _mockUserRepository.Verify(x => x.GetByUsernameAsync(username), Times.Once);
             _mockPasswordHasher.Verify(x => x.VerifyPassword(password, hashedPassword), Times.Once);
+        }
+
+        [Test]
+        public async Task AuthenticateAsync_WithEmptyUsername_ReturnsFalse()
+        {
+            // Arrange
+            var username = "";
+            var password = "password";
+
+            // Act
+            var result = await _authenticationService.AuthenticateAsync(username, password);
+
+            // Assert
+            Assert.That(result, Is.False);
+            _mockUserRepository.Verify(x => x.GetByUsernameAsync(It.IsAny<string>()), Times.Never);
+            _mockPasswordHasher.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Test]
+        public async Task AuthenticateAsync_WithEmptyPassword_ReturnsFalse()
+        {
+            // Arrange
+            var username = "admin";
+            var password = "";
+
+            // Act
+            var result = await _authenticationService.AuthenticateAsync(username, password);
+
+            // Assert
+            Assert.That(result, Is.False);
+            _mockUserRepository.Verify(x => x.GetByUsernameAsync(It.IsAny<string>()), Times.Never);
+            _mockPasswordHasher.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Test]
+        public async Task AuthenticateAsync_WithNullUsername_ReturnsFalse()
+        {
+            // Arrange
+            string? username = null;
+            var password = "password";
+
+            // Act
+            var result = await _authenticationService.AuthenticateAsync(username!, password);
+
+            // Assert
+            Assert.That(result, Is.False);
+            _mockUserRepository.Verify(x => x.GetByUsernameAsync(It.IsAny<string>()), Times.Never);
+            _mockPasswordHasher.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Test]
+        public async Task AuthenticateAsync_WithNullPassword_ReturnsFalse()
+        {
+            // Arrange
+            var username = "admin";
+            string? password = null;
+
+            // Act
+            var result = await _authenticationService.AuthenticateAsync(username, password!);
+
+            // Assert
+            Assert.That(result, Is.False);
+            _mockUserRepository.Verify(x => x.GetByUsernameAsync(It.IsAny<string>()), Times.Never);
+            _mockPasswordHasher.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Test]
+        public async Task AuthenticateAsync_WithUserHavingNullPasswordHash_ReturnsFalse()
+        {
+            // Arrange
+            var username = "admin";
+            var password = "password";
+            
+            var user = new User
+            {
+                Id = "1",
+                Username = username,
+                PasswordHash = null!,
+                Email = "admin@sportzone.com",
+                FirstName = "Admin",
+                LastName = "User",
+                Name = "Admin User"
+            };
+
+            _mockUserRepository
+                .Setup(x => x.GetByUsernameAsync(username))
+                .ReturnsAsync(user);
+
+            // Act
+            var result = await _authenticationService.AuthenticateAsync(username, password);
+
+            // Assert
+            Assert.That(result, Is.False);
+            _mockUserRepository.Verify(x => x.GetByUsernameAsync(username), Times.Once);
+            _mockPasswordHasher.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Test]
+        public async Task AuthenticateAsync_WithUserHavingEmptyPasswordHash_ReturnsFalse()
+        {
+            // Arrange
+            var username = "admin";
+            var password = "password";
+            
+            var user = new User
+            {
+                Id = "1",
+                Username = username,
+                PasswordHash = "",
+                Email = "admin@sportzone.com",
+                FirstName = "Admin",
+                LastName = "User",
+                Name = "Admin User"
+            };
+
+            _mockUserRepository
+                .Setup(x => x.GetByUsernameAsync(username))
+                .ReturnsAsync(user);
+
+            // Act
+            var result = await _authenticationService.AuthenticateAsync(username, password);
+
+            // Assert
+            Assert.That(result, Is.False);
+            _mockUserRepository.Verify(x => x.GetByUsernameAsync(username), Times.Once);
+            _mockPasswordHasher.Verify(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Test]
+        public void GenerateJwtToken_WithValidUsername_ReturnsToken()
+        {
+            // Arrange
+            var username = "admin";
+
+            // Act
+            var token = _authenticationService.GenerateJwtToken(username);
+
+            // Assert
+            Assert.That(token, Is.Not.Null);
+            Assert.That(token, Is.Not.Empty);
+            Assert.That(token.Split('.').Length, Is.EqualTo(3)); // JWT has 3 parts
         }
     }
 }
