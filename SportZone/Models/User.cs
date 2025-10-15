@@ -16,9 +16,9 @@ public class User
     [BsonRequired]
     public string Email { get; set; } = string.Empty;
 
-    [BsonElement("passwordHash")]
+    [BsonElement("password")]
     [BsonRequired]
-    public string PasswordHash { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
 
     [BsonElement("firstName")]
     public string? FirstName { get; set; }
