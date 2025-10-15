@@ -9,21 +9,26 @@ public class User
     [BsonRepresentation(BsonType.ObjectId)]
     public string? Id { get; set; }
 
+    [BsonElement("username")]
+    public string? Username { get; set; }
+
     [BsonElement("email")]
     [BsonRequired]
     public string Email { get; set; } = string.Empty;
 
-    [BsonElement("password")]
+    [BsonElement("passwordHash")]
     [BsonRequired]
-    public string Password { get; set; } = string.Empty;
+    public string PasswordHash { get; set; } = string.Empty;
+
+    [BsonElement("firstName")]
+    public string? FirstName { get; set; }
+
+    [BsonElement("lastName")]
+    public string? LastName { get; set; }
 
     [BsonElement("name")]
     [BsonRequired]
     public string Name { get; set; } = string.Empty;
-
-    [BsonElement("name")]
-    [BsonRequired]
-    public string Username { get; set; } = string.Empty;
 
     [BsonElement("preferredSport")]
     public string? PreferredSport { get; set; }
