@@ -21,6 +21,9 @@ builder.Services.Configure<MongoDbSettings>(
 // Register repositories
 builder.Services.AddSingleton<IUserRepository, UserRepository>();
 builder.Services.AddSingleton<ISportActivityRepository, SportActivityRepository>();
+builder.Services.AddSingleton<IFollowRepository, FollowRepository>();
+builder.Services.AddSingleton<IPostRepository, PostRepository>();
+builder.Services.AddSingleton<ICommentRepository, CommentRepository>();
 
 // Register services
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
@@ -116,13 +119,14 @@ var app = builder.Build();
 // Seed the database
 await app.SeedDatabaseAsync();
 
-// DO NOT TOUCH, THIS NEEDS TO BE LIKE THIS
+// DO NOT ADD AN IF DEVELOPMENT HERE !! 
 app.UseSwagger();
 app.UseSwaggerUI(options =>
 {
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "SportZone API v1");
     options.RoutePrefix = string.Empty; // Swagger UI op root URL
 });
+
 
 app.UseHttpsRedirection();
 

@@ -1,6 +1,5 @@
 // SportZone Backend Database Schema (MongoDB)
 // Database Markup Language (DBML) Documentation
-// This file describes the core entities of the SportZone platform
 
 // ============================================================
 // CORE ENTITIES
@@ -129,20 +128,122 @@ Table sport_activities {
 }
 
 // ============================================================
+// SOCIAL FEATURES
+// ============================================================
+
+Table follows {
+  _id ObjectId [primary key]
+  followerId ObjectId [not null, note: 'User who is following']
+  followingId ObjectId [not null, note: 'User being followed']
+  createdAt timestamp [default: `now()`]
+  
+  Indexes {
+    (followerId, followingId) [unique]
+    followerId
+    followingId
+  }
+  
+  Note: 'User follow relationships'
+}
+
+Table posts {
+  _id ObjectId [primary key]
+  userId ObjectId [not null]
+  activityId ObjectId [note: 'Optional reference to activity']
+  
+  // Content
+  title varchar
+  body text [not null]
+  postType varchar [note: 'Enum: Text, Image, Video, Activity, Achievement']
+  
+  // Media
+  mediaUrls json [note: 'Array of image/video URLs']
+  thumbnailUrl varchar
+  
+  // Engagement
+  likes json [note: 'Array of user ObjectIds who liked']
+  likesCount integer [default: 0]
+  commentsCount integer [default: 0]
+  sharesCount integer [default: 0]
+  
+  // Visibility
+  visibility varchar [default: 'public', note: 'Enum: public, friends, private']
+  isActive boolean [default: true]
+  isPinned boolean [default: false]
+  
+  // Metadata
+  tags json [note: 'Array of hashtags']
+  location varchar
+  latitude double
+  longitude double
+  
+  createdAt timestamp [default: `now()`]
+  updatedAt timestamp [default: `now()`]
+  
+  Indexes {
+    userId
+    activityId
+    createdAt [desc]
+  }
+  
+  Note: 'User posts and updates'
+}
+
+Table comments {
+  _id ObjectId [primary key]
+  postId ObjectId [not null]
+  userId ObjectId [not null]
+  parentCommentId ObjectId [note: 'For nested replies']
+  
+  body text [not null]
+  
+  // Engagement
+  likes json [note: 'Array of user ObjectIds who liked']
+  likesCount integer [default: 0]
+  
+  isActive boolean [default: true]
+  isEdited boolean [default: false]
+  
+  createdAt timestamp [default: `now()`]
+  updatedAt timestamp [default: `now()`]
+  
+  Indexes {
+    postId
+    userId
+    parentCommentId
+  }
+  
+  Note: 'Comments on posts'
+}
+
+// ============================================================
 // RELATIONSHIPS
 // ============================================================
 
+// Core relationships
 Ref: sports.createdBy > users._id
 Ref: sport_activities.createdBy > users._id
 Ref: sport_activities.organizerId > users._id
+
+// Social feature relationships
+Ref: follows.followerId > users._id
+Ref: follows.followingId > users._id
+Ref: posts.userId > users._id
+Ref: posts.activityId > sport_activities._id
+Ref: comments.postId > posts._id
+Ref: comments.userId > users._id
+Ref: comments.parentCommentId > comments._id
 
 // ============================================================
 // NOTES
 // ============================================================
 
 // This schema follows MongoDB best practices with some normalization
+// Implemented:
+// ✅ Core entities (users, sports, sport_activities)
+// ✅ Social features (follows, posts, comments)
+//
 // Future iterations will add:
-// - Social features (follows, posts, comments)
 // - Activity interactions (participants, invitations)
 // - Messaging system (conversations, messages)
 // - Notifications
