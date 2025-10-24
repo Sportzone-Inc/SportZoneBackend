@@ -15,4 +15,7 @@ public interface ISportActivityRepository
     Task<bool> DeleteAsync(string id);
     Task<bool> JoinActivityAsync(string activityId, string userId);
     Task<bool> LeaveActivityAsync(string activityId, string userId);
+    
+    // New search methods
+    Task<IEnumerable<SportActivity>> GetActivitiesByDateRangeAsync(DateTime startDate, DateTime endDate);
 }

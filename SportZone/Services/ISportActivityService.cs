@@ -15,4 +15,18 @@ public interface ISportActivityService
     Task<bool> DeleteSportActivityAsync(string id);
     Task<bool> JoinSportActivityAsync(string activityId, string userId);
     Task<bool> LeaveSportActivityAsync(string activityId, string userId);
+    
+    // New search and filter methods
+    Task<IEnumerable<SportActivity>> SearchActivitiesByLocationAsync(double latitude, double longitude, double radiusKm);
+    Task<IEnumerable<SportActivity>> SearchActivitiesByDateRangeAsync(DateTime startDate, DateTime endDate);
+    Task<IEnumerable<SportActivity>> SearchActivitiesWithFiltersAsync(
+        SportType? sportType = null,
+        double? latitude = null,
+        double? longitude = null,
+        double? radiusKm = null,
+        DateTime? startDate = null,
+        DateTime? endDate = null,
+        bool? hasAvailableSlots = null,
+        bool? isActive = true
+    );
 }
