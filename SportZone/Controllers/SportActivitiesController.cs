@@ -133,6 +133,86 @@ public class SportActivitiesController : ControllerBase
     }
 
     /// <summary>
+    /// Zoek activiteiten op basis van locatie en straal
+    /// </summary>
+    [HttpGet("search/location")]
+    public async Task<ActionResult<IEnumerable<ActivitySearchResultDto>>> SearchActivitiesByLocation(
+        [FromQuery] double latitude,
+        [FromQuery] double longitude,
+        [FromQuery] double radiusKm = 10.0)
+    {
+        try
+        {
+            var activities = await _sportActivityService.SearchActivitiesByLocationAsync(latitude, longitude, radiusKm);
+            var response = activities.Select(activity => MapToSearchResultDto(activity, latitude, longitude));
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching activities by location");
+            return StatusCode(500, "Er is een fout opgetreden bij het zoeken van activiteiten");
+        }
+    }
+
+    /// <summary>
+    /// Zoek activiteiten binnen een datum bereik
+    /// </summary>
+    [HttpGet("search/daterange")]
+    public async Task<ActionResult<IEnumerable<ActivitySearchResultDto>>> SearchActivitiesByDateRange(
+        [FromQuery] DateTime startDate,
+        [FromQuery] DateTime endDate)
+    {
+        try
+        {
+            if (startDate > endDate)
+            {
+                return BadRequest("Startdatum moet voor einddatum liggen");
+            }
+
+            var activities = await _sportActivityService.SearchActivitiesByDateRangeAsync(startDate, endDate);
+            var response = activities.Select(activity => MapToSearchResultDto(activity, null, null));
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching activities by date range");
+            return StatusCode(500, "Er is een fout opgetreden bij het zoeken van activiteiten");
+        }
+    }
+
+    /// <summary>
+    /// Geavanceerd zoeken met meerdere filters
+    /// </summary>
+    [HttpPost("search")]
+    public async Task<ActionResult<IEnumerable<ActivitySearchResultDto>>> SearchActivitiesWithFilters(
+        [FromBody] ActivitySearchFilterDto filters)
+    {
+        try
+        {
+            var activities = await _sportActivityService.SearchActivitiesWithFiltersAsync(
+                sportType: filters.SportType,
+                latitude: filters.Latitude,
+                longitude: filters.Longitude,
+                radiusKm: filters.RadiusKm,
+                startDate: filters.StartDate,
+                endDate: filters.EndDate,
+                hasAvailableSlots: filters.HasAvailableSlots,
+                isActive: filters.IsActive
+            );
+
+            var response = activities.Select(activity => 
+                MapToSearchResultDto(activity, filters.Latitude, filters.Longitude));
+            
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching activities with filters");
+            return StatusCode(500, "Er is een fout opgetreden bij het zoeken van activiteiten");
+        }
+    }
+
+    /// <summary>
     /// Update een sportactiviteit
     /// </summary>
     [HttpPut("{id}")]
@@ -260,5 +340,58 @@ public class SportActivitiesController : ControllerBase
             CreatedAt = activity.CreatedAt,
             UpdatedAt = activity.UpdatedAt
         };
+    }
+
+    private static ActivitySearchResultDto MapToSearchResultDto(SportActivity activity, double? userLat, double? userLon)
+    {
+        double? distanceKm = null;
+        if (userLat.HasValue && userLon.HasValue && activity.Latitude.HasValue && activity.Longitude.HasValue)
+        {
+            distanceKm = CalculateDistance(userLat.Value, userLon.Value, activity.Latitude.Value, activity.Longitude.Value);
+        }
+
+        var availableSlots = activity.MaxParticipants.HasValue
+            ? activity.MaxParticipants.Value - activity.CurrentParticipants
+            : int.MaxValue;
+
+        return new ActivitySearchResultDto
+        {
+            Id = activity.Id!,
+            UniqueId = activity.UniqueId,
+            Name = activity.Name,
+            Description = activity.Description,
+            SportType = activity.SportType,
+            Location = activity.Location,
+            Latitude = activity.Latitude,
+            Longitude = activity.Longitude,
+            ScheduledDate = activity.ScheduledDate,
+            MaxParticipants = activity.MaxParticipants,
+            CurrentParticipants = activity.CurrentParticipants,
+            IsActive = activity.IsActive,
+            DistanceKm = distanceKm.HasValue ? Math.Round(distanceKm.Value, 2) : null,
+            AvailableSlots = availableSlots,
+            Participants = activity.Participants
+        };
+    }
+
+    private static double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
+    {
+        const double earthRadiusKm = 6371;
+
+        var dLat = DegreesToRadians(lat2 - lat1);
+        var dLon = DegreesToRadians(lon2 - lon1);
+
+        var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                Math.Cos(DegreesToRadians(lat1)) * Math.Cos(DegreesToRadians(lat2)) *
+                Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+
+        var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+
+        return earthRadiusKm * c;
+    }
+
+    private static double DegreesToRadians(double degrees)
+    {
+        return degrees * Math.PI / 180;
     }
 }
