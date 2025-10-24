@@ -1,0 +1,153 @@
+// SportZone Backend Database Schema (MongoDB)
+// Database Markup Language (DBML) Documentation
+// This file describes the core entities of the SportZone platform
+
+// ============================================================
+// CORE ENTITIES
+// ============================================================
+
+Table users {
+  _id ObjectId [primary key, note: 'MongoDB ObjectId']
+  username varchar [unique]
+  email varchar [not null, unique]
+  password varchar [not null, note: 'Hashed password']
+  firstName varchar
+  lastName varchar
+  name varchar [not null]
+  profileImage varchar [note: 'URL to profile image']
+  bio text
+  phoneNumber varchar
+  dateOfBirth date
+  gender varchar [note: 'Enum: Male, Female, Other, PreferNotToSay']
+  location varchar
+  latitude double
+  longitude double
+  preferredSport varchar
+  skillLevel varchar [note: 'Enum: Beginner, Intermediate, Advanced, Expert']
+  isActive boolean [default: true]
+  isVerified boolean [default: false]
+  lastLoginAt timestamp
+  createdAt timestamp [default: `now()`]
+  updatedAt timestamp [default: `now()`]
+  
+  Indexes {
+    email [unique]
+    username [unique]
+    location
+  }
+  
+  Note: 'User accounts for SportZone platform'
+}
+
+Table sports {
+  _id ObjectId [primary key, note: 'MongoDB ObjectId']
+  name varchar [not null]
+  type varchar [not null, note: 'Enum: Basketball, Running, Football, Tennis, etc.']
+  category varchar [note: 'Team, Individual, Water, Combat, etc.']
+  description text
+  iconUrl varchar
+  location varchar
+  radiusKm double
+  createdBy ObjectId
+  isActive boolean [default: true]
+  createdAt timestamp [default: `now()`]
+  updatedAt timestamp [default: `now()`]
+  
+  Indexes {
+    type
+    category
+  }
+  
+  Note: 'Sport types and configurations'
+}
+
+Table sport_activities {
+  _id ObjectId [primary key, note: 'MongoDB ObjectId']
+  uniqueId varchar [not null, unique, note: 'GUID for external references']
+  name varchar [not null]
+  description text
+  sportType varchar [not null, note: 'Enum: Basketball, Running, etc.']
+  category varchar
+  
+  // Location data
+  location varchar
+  address varchar
+  city varchar
+  country varchar
+  latitude double
+  longitude double
+  radiusKm double
+  
+  // Scheduling
+  scheduledDate timestamp
+  startTime timestamp
+  endTime timestamp
+  duration integer [note: 'Duration in minutes']
+  
+  // Participants
+  maxParticipants integer
+  minParticipants integer [default: 1]
+  currentParticipants integer [default: 0]
+  participants json [note: 'Array of user ObjectIds']
+  waitlist json [note: 'Array of user ObjectIds on waitlist']
+  
+  // Activity details
+  skillLevelRequired varchar [note: 'Enum: Any, Beginner, Intermediate, Advanced']
+  ageRestriction varchar [note: 'e.g., 18+, All ages']
+  costPerPerson decimal [default: 0]
+  currency varchar [default: 'USD']
+  equipmentProvided boolean [default: false]
+  equipmentNeeded text
+  
+  // Status and visibility
+  status varchar [note: 'Enum: Draft, Published, InProgress, Completed, Cancelled']
+  isActive boolean [default: true]
+  isPublic boolean [default: true]
+  isFeatured boolean [default: false]
+  
+  // Creator and organizer
+  createdBy ObjectId [not null]
+  organizerId ObjectId
+  
+  // Metadata
+  views integer [default: 0]
+  tags json [note: 'Array of tags']
+  imageUrls json [note: 'Array of image URLs']
+  
+  createdAt timestamp [default: `now()`]
+  updatedAt timestamp [default: `now()`]
+  
+  Indexes {
+    sportType
+    status
+    scheduledDate
+    location
+    (latitude, longitude) [name: 'geo_index']
+  }
+  
+  Note: 'Scheduled sport activities and events'
+}
+
+// ============================================================
+// RELATIONSHIPS
+// ============================================================
+
+Ref: sports.createdBy > users._id
+Ref: sport_activities.createdBy > users._id
+Ref: sport_activities.organizerId > users._id
+
+// ============================================================
+// NOTES
+// ============================================================
+
+// This schema follows MongoDB best practices with some normalization
+// Future iterations will add:
+// - Social features (follows, posts, comments)
+// - Activity interactions (participants, invitations)
+// - Messaging system (conversations, messages)
+// - Notifications
+// - Reviews & ratings
+// - User preferences & settings
+// - Achievements & gamification
+// - Reports & moderation
+// - Analytics & tracking
