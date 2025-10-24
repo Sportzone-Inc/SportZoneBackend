@@ -119,16 +119,14 @@ var app = builder.Build();
 // Seed the database
 await app.SeedDatabaseAsync();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// DO NOT ADD AN IF DEVELOPMENT HERE !! 
+app.UseSwagger();
+app.UseSwaggerUI(options =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "SportZone API v1");
-        options.RoutePrefix = string.Empty; // Swagger UI op root URL
-    });
-}
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "SportZone API v1");
+    options.RoutePrefix = string.Empty; // Swagger UI op root URL
+});
+
 
 app.UseHttpsRedirection();
 
