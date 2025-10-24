@@ -21,6 +21,9 @@ builder.Services.Configure<MongoDbSettings>(
 // Register repositories
 builder.Services.AddSingleton<IUserRepository, UserRepository>();
 builder.Services.AddSingleton<ISportActivityRepository, SportActivityRepository>();
+builder.Services.AddSingleton<IFollowRepository, FollowRepository>();
+builder.Services.AddSingleton<IPostRepository, PostRepository>();
+builder.Services.AddSingleton<ICommentRepository, CommentRepository>();
 
 // Register services
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
