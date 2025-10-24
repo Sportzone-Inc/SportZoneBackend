@@ -24,6 +24,13 @@ builder.Services.AddSingleton<ISportActivityRepository, SportActivityRepository>
 builder.Services.AddSingleton<IFollowRepository, FollowRepository>();
 builder.Services.AddSingleton<IPostRepository, PostRepository>();
 builder.Services.AddSingleton<ICommentRepository, CommentRepository>();
+builder.Services.AddSingleton<IActivityParticipantRepository, ActivityParticipantRepository>();
+builder.Services.AddSingleton<IActivityInvitationRepository, ActivityInvitationRepository>();
+builder.Services.AddSingleton<IConversationRepository, ConversationRepository>();
+builder.Services.AddSingleton<IMessageRepository, MessageRepository>();
+builder.Services.AddSingleton<INotificationRepository, NotificationRepository>();
+builder.Services.AddSingleton<IReviewRepository, ReviewRepository>();
+builder.Services.AddSingleton<IUserSettingsRepository, UserSettingsRepository>();
 
 // Register services
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
