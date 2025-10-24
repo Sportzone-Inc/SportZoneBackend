@@ -102,4 +102,118 @@ public class SportActivityService : ISportActivityService
 
         return await _sportActivityRepository.LeaveActivityAsync(activityId, userId);
     }
+
+    public async Task<IEnumerable<SportActivity>> SearchActivitiesByLocationAsync(double latitude, double longitude, double radiusKm)
+    {
+        var allActivities = await _sportActivityRepository.GetActiveActivitiesAsync();
+        
+        return allActivities.Where(activity =>
+            activity.Latitude.HasValue &&
+            activity.Longitude.HasValue &&
+            CalculateDistance(latitude, longitude, activity.Latitude.Value, activity.Longitude.Value) <= radiusKm
+        );
+    }
+
+    public async Task<IEnumerable<SportActivity>> SearchActivitiesByDateRangeAsync(DateTime startDate, DateTime endDate)
+    {
+        return await _sportActivityRepository.GetActivitiesByDateRangeAsync(startDate, endDate);
+    }
+
+    public async Task<IEnumerable<SportActivity>> SearchActivitiesWithFiltersAsync(
+        SportType? sportType = null,
+        double? latitude = null,
+        double? longitude = null,
+        double? radiusKm = null,
+        DateTime? startDate = null,
+        DateTime? endDate = null,
+        bool? hasAvailableSlots = null,
+        bool? isActive = true)
+    {
+        IEnumerable<SportActivity> activities;
+
+        // Start with sport type filter if provided
+        if (sportType.HasValue)
+        {
+            activities = await _sportActivityRepository.GetBySportTypeAsync(sportType.Value);
+        }
+        else
+        {
+            activities = await _sportActivityRepository.GetAllAsync();
+        }
+
+        // Apply active filter
+        if (isActive.HasValue)
+        {
+            activities = activities.Where(a => a.IsActive == isActive.Value);
+        }
+
+        // Apply location filter
+        if (latitude.HasValue && longitude.HasValue && radiusKm.HasValue)
+        {
+            activities = activities.Where(activity =>
+                activity.Latitude.HasValue &&
+                activity.Longitude.HasValue &&
+                CalculateDistance(latitude.Value, longitude.Value, activity.Latitude.Value, activity.Longitude.Value) <= radiusKm.Value
+            );
+        }
+
+        // Apply date range filter
+        if (startDate.HasValue && endDate.HasValue)
+        {
+            activities = activities.Where(activity =>
+                activity.ScheduledDate.HasValue &&
+                activity.ScheduledDate.Value >= startDate.Value &&
+                activity.ScheduledDate.Value <= endDate.Value
+            );
+        }
+        else if (startDate.HasValue)
+        {
+            activities = activities.Where(activity =>
+                activity.ScheduledDate.HasValue &&
+                activity.ScheduledDate.Value >= startDate.Value
+            );
+        }
+        else if (endDate.HasValue)
+        {
+            activities = activities.Where(activity =>
+                activity.ScheduledDate.HasValue &&
+                activity.ScheduledDate.Value <= endDate.Value
+            );
+        }
+
+        // Apply available slots filter
+        if (hasAvailableSlots.HasValue && hasAvailableSlots.Value)
+        {
+            activities = activities.Where(activity =>
+                !activity.MaxParticipants.HasValue ||
+                activity.CurrentParticipants < activity.MaxParticipants.Value
+            );
+        }
+
+        return activities;
+    }
+
+    /// <summary>
+    /// Calculate distance between two GPS coordinates using Haversine formula
+    /// </summary>
+    private static double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
+    {
+        const double earthRadiusKm = 6371;
+
+        var dLat = DegreesToRadians(lat2 - lat1);
+        var dLon = DegreesToRadians(lon2 - lon1);
+
+        var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                Math.Cos(DegreesToRadians(lat1)) * Math.Cos(DegreesToRadians(lat2)) *
+                Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+
+        var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+
+        return earthRadiusKm * c;
+    }
+
+    private static double DegreesToRadians(double degrees)
+    {
+        return degrees * Math.PI / 180;
+    }
 }
