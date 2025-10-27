@@ -23,43 +23,44 @@ namespace SportZone.Controllers
         }
 
         /// <summary>
-        /// Login met gebruikersnaam en wachtwoord
+        /// Login met gebruikersnaam/email en wachtwoord
         /// </summary>
         /// <param name="loginRequest">Login credentials</param>
-        /// <returns>JWT token bij succesvolle authenticatie</returns>
-        /// <response code="200">Login succesvol, retourneert JWT token</response>
+        /// <returns>JWT token en gebruikers informatie bij succesvolle authenticatie</returns>
+        /// <response code="200">Login succesvol, retourneert JWT token en gebruikers informatie</response>
         /// <response code="401">Ongeldige credentials</response>
         [HttpPost("login")]
         [ProducesResponseType(typeof(LoginResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Login([FromBody] LoginRequestDto loginRequest)
         {
-            if (string.IsNullOrWhiteSpace(loginRequest.Username) || 
+            if (string.IsNullOrWhiteSpace(loginRequest.UsernameOrEmail) || 
                 string.IsNullOrWhiteSpace(loginRequest.Password))
             {
-                return BadRequest(new { message = "Gebruikersnaam en wachtwoord zijn verplicht" });
+                return BadRequest(new { message = "Gebruikersnaam/email en wachtwoord zijn verplicht" });
             }
 
-            var isAuthenticated = await _authenticationService.AuthenticateAsync(
-                loginRequest.Username, 
+            var (isAuthenticated, userId) = await _authenticationService.AuthenticateAsync(
+                loginRequest.UsernameOrEmail, 
                 loginRequest.Password
             );
 
-            if (!isAuthenticated)
+            if (!isAuthenticated || userId == null)
             {
-                _logger.LogWarning("Mislukte login poging voor gebruiker: {Username}", loginRequest.Username);
-                return Unauthorized(new { message = "Ongeldige gebruikersnaam of wachtwoord" });
+                _logger.LogWarning("Mislukte login poging voor gebruiker: {UsernameOrEmail}", loginRequest.UsernameOrEmail);
+                return Unauthorized(new { message = "Ongeldige gebruikersnaam/email of wachtwoord" });
             }
 
-            var token = _authenticationService.GenerateJwtToken(loginRequest.Username);
+            var token = _authenticationService.GenerateJwtToken(loginRequest.UsernameOrEmail, userId);
             var expiresAt = DateTime.UtcNow.AddMinutes(60); // Default expiry
 
-            _logger.LogInformation("Succesvolle login voor gebruiker: {Username}", loginRequest.Username);
+            _logger.LogInformation("Succesvolle login voor gebruiker: {UsernameOrEmail}", loginRequest.UsernameOrEmail);
 
             return Ok(new LoginResponseDto
             {
                 Token = token,
-                Username = loginRequest.Username,
+                Username = loginRequest.UsernameOrEmail,
+                UserId = userId,
                 ExpiresAt = expiresAt
             });
         }
