@@ -29,7 +29,8 @@ namespace SportZone.Tests.Controllers
             // Arrange
             var loginRequest = new LoginRequestDto
             {
-                UsernameOrEmail = "testuser",
+                Username = "testuser",
+                Email = null,
                 Password = "password123"
             };
 
@@ -37,11 +38,11 @@ namespace SportZone.Tests.Controllers
             var expectedToken = "mock-jwt-token";
 
             _mockAuthService
-                .Setup(x => x.AuthenticateAsync(loginRequest.UsernameOrEmail, loginRequest.Password))
+                .Setup(x => x.AuthenticateAsync("testuser", loginRequest.Password, false))
                 .ReturnsAsync((true, expectedUserId));
 
             _mockAuthService
-                .Setup(x => x.GenerateJwtToken(loginRequest.UsernameOrEmail, expectedUserId))
+                .Setup(x => x.GenerateJwtToken("testuser", expectedUserId))
                 .Returns(expectedToken);
 
             // Act
@@ -56,7 +57,7 @@ namespace SportZone.Tests.Controllers
             Assert.That(response, Is.Not.Null);
             Assert.That(response!.Token, Is.EqualTo(expectedToken));
             Assert.That(response.UserId, Is.EqualTo(expectedUserId));
-            Assert.That(response.Username, Is.EqualTo(loginRequest.UsernameOrEmail));
+            Assert.That(response.Username, Is.EqualTo("testuser"));
         }
 
         [Test]
@@ -65,7 +66,8 @@ namespace SportZone.Tests.Controllers
             // Arrange
             var loginRequest = new LoginRequestDto
             {
-                UsernameOrEmail = "test@example.com",
+                Username = null,
+                Email = "test@example.com",
                 Password = "password123"
             };
 
@@ -73,11 +75,11 @@ namespace SportZone.Tests.Controllers
             var expectedToken = "mock-jwt-token";
 
             _mockAuthService
-                .Setup(x => x.AuthenticateAsync(loginRequest.UsernameOrEmail, loginRequest.Password))
+                .Setup(x => x.AuthenticateAsync("test@example.com", loginRequest.Password, true))
                 .ReturnsAsync((true, expectedUserId));
 
             _mockAuthService
-                .Setup(x => x.GenerateJwtToken(loginRequest.UsernameOrEmail, expectedUserId))
+                .Setup(x => x.GenerateJwtToken("test@example.com", expectedUserId))
                 .Returns(expectedToken);
 
             // Act
@@ -92,7 +94,7 @@ namespace SportZone.Tests.Controllers
             Assert.That(response, Is.Not.Null);
             Assert.That(response!.Token, Is.EqualTo(expectedToken));
             Assert.That(response.UserId, Is.EqualTo(expectedUserId));
-            Assert.That(response.Username, Is.EqualTo(loginRequest.UsernameOrEmail));
+            Assert.That(response.Username, Is.EqualTo("test@example.com"));
         }
 
         [Test]
@@ -101,12 +103,13 @@ namespace SportZone.Tests.Controllers
             // Arrange
             var loginRequest = new LoginRequestDto
             {
-                UsernameOrEmail = "invaliduser",
+                Username = "invaliduser",
+                Email = null,
                 Password = "wrongpassword"
             };
 
             _mockAuthService
-                .Setup(x => x.AuthenticateAsync(loginRequest.UsernameOrEmail, loginRequest.Password))
+                .Setup(x => x.AuthenticateAsync("invaliduser", loginRequest.Password, false))
                 .ReturnsAsync((false, null));
 
             // Act
@@ -114,6 +117,66 @@ namespace SportZone.Tests.Controllers
 
             // Assert
             Assert.That(result, Is.InstanceOf<UnauthorizedObjectResult>());
+        }
+
+        [Test]
+        public async Task Login_WithBothUsernameAndEmail_ReturnsBadRequest()
+        {
+            // Arrange
+            var loginRequest = new LoginRequestDto
+            {
+                Username = "testuser",
+                Email = "test@example.com",
+                Password = "password123"
+            };
+
+            // Act
+            var result = await _controller.Login(loginRequest);
+
+            // Assert
+            Assert.That(result, Is.InstanceOf<BadRequestObjectResult>());
+            var badRequestResult = result as BadRequestObjectResult;
+            Assert.That(badRequestResult, Is.Not.Null);
+        }
+
+        [Test]
+        public async Task Login_WithoutUsernameAndEmail_ReturnsBadRequest()
+        {
+            // Arrange
+            var loginRequest = new LoginRequestDto
+            {
+                Username = null,
+                Email = null,
+                Password = "password123"
+            };
+
+            // Act
+            var result = await _controller.Login(loginRequest);
+
+            // Assert
+            Assert.That(result, Is.InstanceOf<BadRequestObjectResult>());
+            var badRequestResult = result as BadRequestObjectResult;
+            Assert.That(badRequestResult, Is.Not.Null);
+        }
+
+        [Test]
+        public async Task Login_WithEmptyPassword_ReturnsBadRequest()
+        {
+            // Arrange
+            var loginRequest = new LoginRequestDto
+            {
+                Username = "testuser",
+                Email = null,
+                Password = ""
+            };
+
+            // Act
+            var result = await _controller.Login(loginRequest);
+
+            // Assert
+            Assert.That(result, Is.InstanceOf<BadRequestObjectResult>());
+            var badRequestResult = result as BadRequestObjectResult;
+            Assert.That(badRequestResult, Is.Not.Null);
         }
     }
 }
