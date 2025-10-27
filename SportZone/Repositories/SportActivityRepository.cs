@@ -5,90 +5,90 @@ using SportZone.Models;
 
 namespace SportZone.Repositories;
 
-public class SportActivityRepository : ISportActivityRepository
+public class EventRepository : IEventRepository
 {
-    private readonly IMongoCollection<SportActivity> _sportActivitiesCollection;
+    private readonly IMongoCollection<Event> _eventsCollection;
 
-    public SportActivityRepository(IOptions<MongoDbSettings> mongoDbSettings)
+    public EventRepository(IOptions<MongoDbSettings> mongoDbSettings)
     {
         var mongoClient = new MongoClient(mongoDbSettings.Value.ConnectionString);
         var mongoDatabase = mongoClient.GetDatabase(mongoDbSettings.Value.DatabaseName);
-        _sportActivitiesCollection = mongoDatabase.GetCollection<SportActivity>("SportActivities");
+        _eventsCollection = mongoDatabase.GetCollection<Event>("events");
     }
 
-    public async Task<SportActivity> CreateAsync(SportActivity sportActivity)
+    public async Task<Event> CreateAsync(Event Event)
     {
-        sportActivity.UniqueId = Guid.NewGuid().ToString();
-        sportActivity.CreatedAt = DateTime.UtcNow;
-        sportActivity.UpdatedAt = DateTime.UtcNow;
-        await _sportActivitiesCollection.InsertOneAsync(sportActivity);
-        return sportActivity;
+        Event.UniqueId = Guid.NewGuid().ToString();
+        Event.CreatedAt = DateTime.UtcNow;
+        Event.UpdatedAt = DateTime.UtcNow;
+        await _eventsCollection.InsertOneAsync(Event);
+        return Event;
     }
 
-    public async Task<SportActivity?> GetByIdAsync(string id)
+    public async Task<Event?> GetByIdAsync(string id)
     {
-        return await _sportActivitiesCollection.Find(x => x.Id == id).FirstOrDefaultAsync();
+        return await _eventsCollection.Find(x => x.Id == id).FirstOrDefaultAsync();
     }
 
-    public async Task<SportActivity?> GetByUniqueIdAsync(string uniqueId)
+    public async Task<Event?> GetByUniqueIdAsync(string uniqueId)
     {
-        return await _sportActivitiesCollection.Find(x => x.UniqueId == uniqueId).FirstOrDefaultAsync();
+        return await _eventsCollection.Find(x => x.UniqueId == uniqueId).FirstOrDefaultAsync();
     }
 
-    public async Task<IEnumerable<SportActivity>> GetAllAsync()
+    public async Task<IEnumerable<Event>> GetAllAsync()
     {
-        return await _sportActivitiesCollection.Find(_ => true).ToListAsync();
+        return await _eventsCollection.Find(_ => true).ToListAsync();
     }
 
-    public async Task<IEnumerable<SportActivity>> GetByUserIdAsync(string userId)
+    public async Task<IEnumerable<Event>> GetByUserIdAsync(string userId)
     {
-        return await _sportActivitiesCollection.Find(x => x.CreatedBy == userId).ToListAsync();
+        return await _eventsCollection.Find(x => x.CreatedBy == userId).ToListAsync();
     }
 
-    public async Task<IEnumerable<SportActivity>> GetBySportTypeAsync(SportType sportType)
+    public async Task<IEnumerable<Event>> GetBySportTypeAsync(SportType sportType)
     {
-        return await _sportActivitiesCollection.Find(x => x.SportType == sportType).ToListAsync();
+        return await _eventsCollection.Find(x => x.SportType == sportType).ToListAsync();
     }
 
-    public async Task<IEnumerable<SportActivity>> GetActiveActivitiesAsync()
+    public async Task<IEnumerable<Event>> GetActiveActivitiesAsync()
     {
-        return await _sportActivitiesCollection.Find(x => x.IsActive == true).ToListAsync();
+        return await _eventsCollection.Find(x => x.IsActive == true).ToListAsync();
     }
 
-    public async Task<bool> UpdateAsync(string id, SportActivity sportActivity)
+    public async Task<bool> UpdateAsync(string id, Event Event)
     {
-        sportActivity.UpdatedAt = DateTime.UtcNow;
-        var result = await _sportActivitiesCollection.ReplaceOneAsync(x => x.Id == id, sportActivity);
+        Event.UpdatedAt = DateTime.UtcNow;
+        var result = await _eventsCollection.ReplaceOneAsync(x => x.Id == id, Event);
         return result.IsAcknowledged && result.ModifiedCount > 0;
     }
 
     public async Task<bool> DeleteAsync(string id)
     {
-        var result = await _sportActivitiesCollection.DeleteOneAsync(x => x.Id == id);
+        var result = await _eventsCollection.DeleteOneAsync(x => x.Id == id);
         return result.IsAcknowledged && result.DeletedCount > 0;
     }
 
     public async Task<bool> JoinActivityAsync(string activityId, string userId)
     {
-        var filter = Builders<SportActivity>.Filter.Eq(x => x.Id, activityId);
-        var update = Builders<SportActivity>.Update
+        var filter = Builders<Event>.Filter.Eq(x => x.Id, activityId);
+        var update = Builders<Event>.Update
             .AddToSet(x => x.Participants, userId)
             .Inc(x => x.CurrentParticipants, 1)
             .Set(x => x.UpdatedAt, DateTime.UtcNow);
 
-        var result = await _sportActivitiesCollection.UpdateOneAsync(filter, update);
+        var result = await _eventsCollection.UpdateOneAsync(filter, update);
         return result.IsAcknowledged && result.ModifiedCount > 0;
     }
 
     public async Task<bool> LeaveActivityAsync(string activityId, string userId)
     {
-        var filter = Builders<SportActivity>.Filter.Eq(x => x.Id, activityId);
-        var update = Builders<SportActivity>.Update
+        var filter = Builders<Event>.Filter.Eq(x => x.Id, activityId);
+        var update = Builders<Event>.Update
             .Pull(x => x.Participants, userId)
             .Inc(x => x.CurrentParticipants, -1)
             .Set(x => x.UpdatedAt, DateTime.UtcNow);
 
-        var result = await _sportActivitiesCollection.UpdateOneAsync(filter, update);
+        var result = await _eventsCollection.UpdateOneAsync(filter, update);
         return result.IsAcknowledged && result.ModifiedCount > 0;
     }
 }

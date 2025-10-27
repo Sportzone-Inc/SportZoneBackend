@@ -3,72 +3,72 @@ using SportZone.Repositories;
 
 namespace SportZone.Services;
 
-public class SportActivityService : ISportActivityService
+public class EventService : IEventService
 {
-    private readonly ISportActivityRepository _sportActivityRepository;
+    private readonly IEventRepository _EventRepository;
     private readonly IUserRepository _userRepository;
 
-    public SportActivityService(ISportActivityRepository sportActivityRepository, IUserRepository userRepository)
+    public EventService(IEventRepository EventRepository, IUserRepository userRepository)
     {
-        _sportActivityRepository = sportActivityRepository;
+        _EventRepository = EventRepository;
         _userRepository = userRepository;
     }
 
-    public async Task<SportActivity> CreateSportActivityAsync(SportActivity sportActivity)
+    public async Task<Event> CreateEventAsync(Event Event)
     {
         // Verify that the user exists
-        var user = await _userRepository.GetByIdAsync(sportActivity.CreatedBy);
+        var user = await _userRepository.GetByIdAsync(Event.CreatedBy);
         if (user == null)
         {
-            throw new ArgumentException($"User with ID {sportActivity.CreatedBy} not found");
+            throw new ArgumentException($"User with ID {Event.CreatedBy} not found");
         }
 
-        return await _sportActivityRepository.CreateAsync(sportActivity);
+        return await _EventRepository.CreateAsync(Event);
     }
 
-    public async Task<SportActivity?> GetSportActivityByIdAsync(string id)
+    public async Task<Event?> GetEventByIdAsync(string id)
     {
-        return await _sportActivityRepository.GetByIdAsync(id);
+        return await _EventRepository.GetByIdAsync(id);
     }
 
-    public async Task<SportActivity?> GetSportActivityByUniqueIdAsync(string uniqueId)
+    public async Task<Event?> GetEventByUniqueIdAsync(string uniqueId)
     {
-        return await _sportActivityRepository.GetByUniqueIdAsync(uniqueId);
+        return await _EventRepository.GetByUniqueIdAsync(uniqueId);
     }
 
-    public async Task<IEnumerable<SportActivity>> GetAllSportActivitiesAsync()
+    public async Task<IEnumerable<Event>> GetAlleventsAsync()
     {
-        return await _sportActivityRepository.GetAllAsync();
+        return await _EventRepository.GetAllAsync();
     }
 
-    public async Task<IEnumerable<SportActivity>> GetSportActivitiesByUserAsync(string userId)
+    public async Task<IEnumerable<Event>> GeteventsByUserAsync(string userId)
     {
-        return await _sportActivityRepository.GetByUserIdAsync(userId);
+        return await _EventRepository.GetByUserIdAsync(userId);
     }
 
-    public async Task<IEnumerable<SportActivity>> GetSportActivitiesByTypeAsync(SportType sportType)
+    public async Task<IEnumerable<Event>> GeteventsByTypeAsync(SportType sportType)
     {
-        return await _sportActivityRepository.GetBySportTypeAsync(sportType);
+        return await _EventRepository.GetBySportTypeAsync(sportType);
     }
 
-    public async Task<IEnumerable<SportActivity>> GetActiveSportActivitiesAsync()
+    public async Task<IEnumerable<Event>> GetActiveeventsAsync()
     {
-        return await _sportActivityRepository.GetActiveActivitiesAsync();
+        return await _EventRepository.GetActiveActivitiesAsync();
     }
 
-    public async Task<bool> UpdateSportActivityAsync(string id, SportActivity sportActivity)
+    public async Task<bool> UpdateEventAsync(string id, Event Event)
     {
-        return await _sportActivityRepository.UpdateAsync(id, sportActivity);
+        return await _EventRepository.UpdateAsync(id, Event);
     }
 
-    public async Task<bool> DeleteSportActivityAsync(string id)
+    public async Task<bool> DeleteEventAsync(string id)
     {
-        return await _sportActivityRepository.DeleteAsync(id);
+        return await _EventRepository.DeleteAsync(id);
     }
 
-    public async Task<bool> JoinSportActivityAsync(string activityId, string userId)
+    public async Task<bool> JoinEventAsync(string activityId, string userId)
     {
-        var activity = await _sportActivityRepository.GetByIdAsync(activityId);
+        var activity = await _EventRepository.GetByIdAsync(activityId);
         if (activity == null)
         {
             return false;
@@ -84,12 +84,12 @@ public class SportActivityService : ISportActivityService
             throw new InvalidOperationException("User already joined this activity");
         }
 
-        return await _sportActivityRepository.JoinActivityAsync(activityId, userId);
+        return await _EventRepository.JoinActivityAsync(activityId, userId);
     }
 
-    public async Task<bool> LeaveSportActivityAsync(string activityId, string userId)
+    public async Task<bool> LeaveEventAsync(string activityId, string userId)
     {
-        var activity = await _sportActivityRepository.GetByIdAsync(activityId);
+        var activity = await _EventRepository.GetByIdAsync(activityId);
         if (activity == null)
         {
             return false;
@@ -100,6 +100,6 @@ public class SportActivityService : ISportActivityService
             throw new InvalidOperationException("User is not part of this activity");
         }
 
-        return await _sportActivityRepository.LeaveActivityAsync(activityId, userId);
+        return await _EventRepository.LeaveActivityAsync(activityId, userId);
     }
 }

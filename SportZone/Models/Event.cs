@@ -6,7 +6,7 @@ namespace SportZone.Models;
 /// <summary>
 /// Scheduled sport activities and events
 /// </summary>
-public class SportActivity
+public class Event
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]

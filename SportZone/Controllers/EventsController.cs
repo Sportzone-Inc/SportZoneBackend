@@ -7,14 +7,14 @@ namespace SportZone.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class SportActivitiesController : ControllerBase
+public class EventsController : ControllerBase
 {
-    private readonly ISportActivityService _sportActivityService;
-    private readonly ILogger<SportActivitiesController> _logger;
+    private readonly IEventService _EventService;
+    private readonly ILogger<EventsController> _logger;
 
-    public SportActivitiesController(ISportActivityService sportActivityService, ILogger<SportActivitiesController> logger)
+    public EventsController(IEventService EventService, ILogger<EventsController> logger)
     {
-        _sportActivityService = sportActivityService;
+        _EventService = EventService;
         _logger = logger;
     }
 
@@ -22,11 +22,11 @@ public class SportActivitiesController : ControllerBase
     /// Creëer een nieuwe sportactiviteit
     /// </summary>
     [HttpPost]
-    public async Task<ActionResult<SportActivityResponseDto>> CreateSportActivity([FromBody] CreateSportActivityDto createDto)
+    public async Task<ActionResult<EventResponseDto>> CreateEvent([FromBody] CreateEventDto createDto)
     {
         try
         {
-            var sportActivity = new SportActivity
+            var Event = new Event
             {
                 Name = createDto.Name,
                 Description = createDto.Description,
@@ -40,10 +40,10 @@ public class SportActivitiesController : ControllerBase
                 CreatedBy = createDto.CreatedBy
             };
 
-            var created = await _sportActivityService.CreateSportActivityAsync(sportActivity);
+            var created = await _EventService.CreateEventAsync(Event);
             var response = MapToResponseDto(created);
 
-            return CreatedAtAction(nameof(GetSportActivityById), new { id = created.Id }, response);
+            return CreatedAtAction(nameof(GetEventById), new { id = created.Id }, response);
         }
         catch (ArgumentException ex)
         {
@@ -60,9 +60,9 @@ public class SportActivitiesController : ControllerBase
     /// Haal een sportactiviteit op via ID
     /// </summary>
     [HttpGet("{id}")]
-    public async Task<ActionResult<SportActivityResponseDto>> GetSportActivityById(string id)
+    public async Task<ActionResult<EventResponseDto>> GetEventById(string id)
     {
-        var activity = await _sportActivityService.GetSportActivityByIdAsync(id);
+        var activity = await _EventService.GetEventByIdAsync(id);
 
         if (activity == null)
         {
@@ -76,9 +76,9 @@ public class SportActivitiesController : ControllerBase
     /// Haal een sportactiviteit op via unieke ID
     /// </summary>
     [HttpGet("unique/{uniqueId}")]
-    public async Task<ActionResult<SportActivityResponseDto>> GetSportActivityByUniqueId(string uniqueId)
+    public async Task<ActionResult<EventResponseDto>> GetEventByUniqueId(string uniqueId)
     {
-        var activity = await _sportActivityService.GetSportActivityByUniqueIdAsync(uniqueId);
+        var activity = await _EventService.GetEventByUniqueIdAsync(uniqueId);
 
         if (activity == null)
         {
@@ -92,9 +92,9 @@ public class SportActivitiesController : ControllerBase
     /// Haal alle sportactiviteiten op
     /// </summary>
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<SportActivityResponseDto>>> GetAllSportActivities()
+    public async Task<ActionResult<IEnumerable<EventResponseDto>>> GetAllevents()
     {
-        var activities = await _sportActivityService.GetAllSportActivitiesAsync();
+        var activities = await _EventService.GetAlleventsAsync();
         var response = activities.Select(MapToResponseDto);
         return Ok(response);
     }
@@ -103,9 +103,9 @@ public class SportActivitiesController : ControllerBase
     /// Haal sportactiviteiten op voor een specifieke gebruiker
     /// </summary>
     [HttpGet("user/{userId}")]
-    public async Task<ActionResult<IEnumerable<SportActivityResponseDto>>> GetSportActivitiesByUser(string userId)
+    public async Task<ActionResult<IEnumerable<EventResponseDto>>> GeteventsByUser(string userId)
     {
-        var activities = await _sportActivityService.GetSportActivitiesByUserAsync(userId);
+        var activities = await _EventService.GeteventsByUserAsync(userId);
         var response = activities.Select(MapToResponseDto);
         return Ok(response);
     }
@@ -114,9 +114,9 @@ public class SportActivitiesController : ControllerBase
     /// Haal sportactiviteiten op per sporttype
     /// </summary>
     [HttpGet("type/{sportType}")]
-    public async Task<ActionResult<IEnumerable<SportActivityResponseDto>>> GetSportActivitiesByType(SportType sportType)
+    public async Task<ActionResult<IEnumerable<EventResponseDto>>> GeteventsByType(SportType sportType)
     {
-        var activities = await _sportActivityService.GetSportActivitiesByTypeAsync(sportType);
+        var activities = await _EventService.GeteventsByTypeAsync(sportType);
         var response = activities.Select(MapToResponseDto);
         return Ok(response);
     }
@@ -125,9 +125,9 @@ public class SportActivitiesController : ControllerBase
     /// Haal actieve sportactiviteiten op
     /// </summary>
     [HttpGet("active")]
-    public async Task<ActionResult<IEnumerable<SportActivityResponseDto>>> GetActiveSportActivities()
+    public async Task<ActionResult<IEnumerable<EventResponseDto>>> GetActiveevents()
     {
-        var activities = await _sportActivityService.GetActiveSportActivitiesAsync();
+        var activities = await _EventService.GetActiveeventsAsync();
         var response = activities.Select(MapToResponseDto);
         return Ok(response);
     }
@@ -136,9 +136,9 @@ public class SportActivitiesController : ControllerBase
     /// Update een sportactiviteit
     /// </summary>
     [HttpPut("{id}")]
-    public async Task<ActionResult> UpdateSportActivity(string id, [FromBody] UpdateSportActivityDto updateDto)
+    public async Task<ActionResult> UpdateEvent(string id, [FromBody] UpdateEventDto updateDto)
     {
-        var existing = await _sportActivityService.GetSportActivityByIdAsync(id);
+        var existing = await _EventService.GetEventByIdAsync(id);
 
         if (existing == null)
         {
@@ -156,7 +156,7 @@ public class SportActivitiesController : ControllerBase
         existing.MaxParticipants = updateDto.MaxParticipants ?? existing.MaxParticipants;
         existing.IsActive = updateDto.IsActive ?? existing.IsActive;
 
-        var result = await _sportActivityService.UpdateSportActivityAsync(id, existing);
+        var result = await _EventService.UpdateEventAsync(id, existing);
 
         if (!result)
         {
@@ -170,9 +170,9 @@ public class SportActivitiesController : ControllerBase
     /// Verwijder een sportactiviteit
     /// </summary>
     [HttpDelete("{id}")]
-    public async Task<ActionResult> DeleteSportActivity(string id)
+    public async Task<ActionResult> DeleteEvent(string id)
     {
-        var result = await _sportActivityService.DeleteSportActivityAsync(id);
+        var result = await _EventService.DeleteEventAsync(id);
 
         if (!result)
         {
@@ -186,11 +186,11 @@ public class SportActivitiesController : ControllerBase
     /// Sluit aan bij een sportactiviteit
     /// </summary>
     [HttpPost("{activityId}/join/{userId}")]
-    public async Task<ActionResult> JoinSportActivity(string activityId, string userId)
+    public async Task<ActionResult> JoinEvent(string activityId, string userId)
     {
         try
         {
-            var result = await _sportActivityService.JoinSportActivityAsync(activityId, userId);
+            var result = await _EventService.JoinEventAsync(activityId, userId);
 
             if (!result)
             {
@@ -214,11 +214,11 @@ public class SportActivitiesController : ControllerBase
     /// Verlaat een sportactiviteit
     /// </summary>
     [HttpPost("{activityId}/leave/{userId}")]
-    public async Task<ActionResult> LeaveSportActivity(string activityId, string userId)
+    public async Task<ActionResult> LeaveEvent(string activityId, string userId)
     {
         try
         {
-            var result = await _sportActivityService.LeaveSportActivityAsync(activityId, userId);
+            var result = await _EventService.LeaveEventAsync(activityId, userId);
 
             if (!result)
             {
@@ -238,9 +238,9 @@ public class SportActivitiesController : ControllerBase
         }
     }
 
-    private static SportActivityResponseDto MapToResponseDto(SportActivity activity)
+    private static EventResponseDto MapToResponseDto(Event activity)
     {
-        return new SportActivityResponseDto
+        return new EventResponseDto
         {
             Id = activity.Id!,
             UniqueId = activity.UniqueId,

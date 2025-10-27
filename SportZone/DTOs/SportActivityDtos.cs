@@ -3,7 +3,7 @@ using SportZone.Models;
 
 namespace SportZone.DTOs;
 
-public class CreateSportActivityDto
+public class CreateEventDto
 {
     [Required]
     public string Name { get; set; } = string.Empty;
@@ -29,7 +29,7 @@ public class CreateSportActivityDto
     public string CreatedBy { get; set; } = string.Empty;
 }
 
-public class UpdateSportActivityDto
+public class UpdateEventDto
 {
     public string? Name { get; set; }
 
@@ -52,7 +52,7 @@ public class UpdateSportActivityDto
     public bool? IsActive { get; set; }
 }
 
-public class SportActivityResponseDto
+public class EventResponseDto
 {
     public string Id { get; set; } = string.Empty;
     public string UniqueId { get; set; } = string.Empty;

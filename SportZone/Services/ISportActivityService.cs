@@ -2,17 +2,17 @@ using SportZone.Models;
 
 namespace SportZone.Services;
 
-public interface ISportActivityService
+public interface IEventService
 {
-    Task<SportActivity> CreateSportActivityAsync(SportActivity sportActivity);
-    Task<SportActivity?> GetSportActivityByIdAsync(string id);
-    Task<SportActivity?> GetSportActivityByUniqueIdAsync(string uniqueId);
-    Task<IEnumerable<SportActivity>> GetAllSportActivitiesAsync();
-    Task<IEnumerable<SportActivity>> GetSportActivitiesByUserAsync(string userId);
-    Task<IEnumerable<SportActivity>> GetSportActivitiesByTypeAsync(SportType sportType);
-    Task<IEnumerable<SportActivity>> GetActiveSportActivitiesAsync();
-    Task<bool> UpdateSportActivityAsync(string id, SportActivity sportActivity);
-    Task<bool> DeleteSportActivityAsync(string id);
-    Task<bool> JoinSportActivityAsync(string activityId, string userId);
-    Task<bool> LeaveSportActivityAsync(string activityId, string userId);
+    Task<Event> CreateEventAsync(Event Event);
+    Task<Event?> GetEventByIdAsync(string id);
+    Task<Event?> GetEventByUniqueIdAsync(string uniqueId);
+    Task<IEnumerable<Event>> GetAlleventsAsync();
+    Task<IEnumerable<Event>> GeteventsByUserAsync(string userId);
+    Task<IEnumerable<Event>> GeteventsByTypeAsync(SportType sportType);
+    Task<IEnumerable<Event>> GetActiveeventsAsync();
+    Task<bool> UpdateEventAsync(string id, Event Event);
+    Task<bool> DeleteEventAsync(string id);
+    Task<bool> JoinEventAsync(string activityId, string userId);
+    Task<bool> LeaveEventAsync(string activityId, string userId);
 }

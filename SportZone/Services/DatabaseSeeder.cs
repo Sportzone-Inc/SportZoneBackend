@@ -1,6 +1,3 @@
-using Microsoft.Extensions.Options;
-using MongoDB.Driver;
-using SportZone.Configuration;
 using SportZone.Models;
 using SportZone.Repositories;
 
