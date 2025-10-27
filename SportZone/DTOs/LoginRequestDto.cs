@@ -6,12 +6,17 @@ namespace SportZone.DTOs
     public class LoginRequestDto
     {
         /// <summary>
-        /// Gebruikersnaam of email
+        /// Gebruikersnaam (optioneel als Email is ingevuld)
         /// </summary>
-        public string UsernameOrEmail { get; set; } = string.Empty;
+        public string? Username { get; set; }
 
         /// <summary>
-        /// Wachtwoord
+        /// Email (optioneel als Username is ingevuld)
+        /// </summary>
+        public string? Email { get; set; }
+
+        /// <summary>
+        /// Wachtwoord (verplicht)
         /// </summary>
         public string Password { get; set; } = string.Empty;
     }
