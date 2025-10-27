@@ -27,39 +27,48 @@ namespace SportZone.Authentication
         }
 
         /// <summary>
-        /// Authenticeer een gebruiker met gebruikersnaam en wachtwoord
+        /// Authenticeer een gebruiker met gebruikersnaam of email en wachtwoord
         /// </summary>
-        public async Task<bool> AuthenticateAsync(string username, string password)
+        public async Task<(bool isAuthenticated, string? userId)> AuthenticateAsync(string identifier, string password, bool isEmail)
         {
             // Validate input parameters
-            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+            if (string.IsNullOrWhiteSpace(identifier) || string.IsNullOrWhiteSpace(password))
             {
-                return false;
+                return (false, null);
             }
 
-            // Get user from repository
-            var user = await _userRepository.GetByUsernameAsync(username);
+            // Get user based on whether identifier is email or username
+            var user = isEmail 
+                ? await _userRepository.GetByEmailAsync(identifier)
+                : await _userRepository.GetByUsernameAsync(identifier);
             
             // Check if user exists
             if (user == null)
             {
-                return false;
+                return (false, null);
             }
 
             // Check if password hash exists
             if (string.IsNullOrWhiteSpace(user.Password))
             {
-                return false;
+                return (false, null);
             }
 
             // Verify password
-            return _passwordHasher.VerifyPassword(password, user.Password);
+            var isPasswordValid = _passwordHasher.VerifyPassword(password, user.Password);
+            
+            if (isPasswordValid)
+            {
+                return (true, user.Id);
+            }
+
+            return (false, null);
         }
 
         /// <summary>
         /// Genereer een JWT token voor een gebruiker
         /// </summary>
-        public string GenerateJwtToken(string username)
+        public string GenerateJwtToken(string identifier, string userId)
         {
             var jwtSettings = _configuration.GetSection("JwtSettings");
             var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey niet geconfigureerd");
@@ -72,8 +81,9 @@ namespace SportZone.Authentication
 
             var claims = new[]
             {
-                new Claim(ClaimTypes.Name, username),
-                new Claim(JwtRegisteredClaimNames.Sub, username),
+                new Claim(ClaimTypes.Name, identifier),
+                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(JwtRegisteredClaimNames.Sub, identifier),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 

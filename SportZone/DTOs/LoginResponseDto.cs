@@ -11,9 +11,14 @@ namespace SportZone.DTOs
         public string Token { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gebruikersnaam
+        /// Gebruikersnaam of email
         /// </summary>
         public string Username { get; set; } = string.Empty;
+
+        /// <summary>
+        /// User ID
+        /// </summary>
+        public string UserId { get; set; } = string.Empty;
 
         /// <summary>
         /// Expiratie datum van de token
