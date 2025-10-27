@@ -29,22 +29,18 @@ namespace SportZone.Authentication
         /// <summary>
         /// Authenticeer een gebruiker met gebruikersnaam of email en wachtwoord
         /// </summary>
-        public async Task<(bool isAuthenticated, string? userId)> AuthenticateAsync(string usernameOrEmail, string password)
+        public async Task<(bool isAuthenticated, string? userId)> AuthenticateAsync(string identifier, string password, bool isEmail)
         {
             // Validate input parameters
-            if (string.IsNullOrWhiteSpace(usernameOrEmail) || string.IsNullOrWhiteSpace(password))
+            if (string.IsNullOrWhiteSpace(identifier) || string.IsNullOrWhiteSpace(password))
             {
                 return (false, null);
             }
 
-            // Try to get user by username first, then by email
-            var user = await _userRepository.GetByUsernameAsync(usernameOrEmail);
-            
-            if (user == null)
-            {
-                // Try to get by email if username lookup failed
-                user = await _userRepository.GetByEmailAsync(usernameOrEmail);
-            }
+            // Get user based on whether identifier is email or username
+            var user = isEmail 
+                ? await _userRepository.GetByEmailAsync(identifier)
+                : await _userRepository.GetByUsernameAsync(identifier);
             
             // Check if user exists
             if (user == null)
@@ -72,7 +68,7 @@ namespace SportZone.Authentication
         /// <summary>
         /// Genereer een JWT token voor een gebruiker
         /// </summary>
-        public string GenerateJwtToken(string usernameOrEmail, string userId)
+        public string GenerateJwtToken(string identifier, string userId)
         {
             var jwtSettings = _configuration.GetSection("JwtSettings");
             var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey niet geconfigureerd");
@@ -85,9 +81,9 @@ namespace SportZone.Authentication
 
             var claims = new[]
             {
-                new Claim(ClaimTypes.Name, usernameOrEmail),
+                new Claim(ClaimTypes.Name, identifier),
                 new Claim(ClaimTypes.NameIdentifier, userId),
-                new Claim(JwtRegisteredClaimNames.Sub, usernameOrEmail),
+                new Claim(JwtRegisteredClaimNames.Sub, identifier),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
