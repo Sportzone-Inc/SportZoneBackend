@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Text;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -12,7 +13,12 @@ using SportZone.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Configure JSON serializer to use string values for enums
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 
 // Configure MongoDB settings
 builder.Services.Configure<MongoDbSettings>(
@@ -31,6 +37,7 @@ builder.Services.AddSingleton<IMessageRepository, MessageRepository>();
 builder.Services.AddSingleton<INotificationRepository, NotificationRepository>();
 builder.Services.AddSingleton<IReviewRepository, ReviewRepository>();
 builder.Services.AddSingleton<IUserSettingsRepository, UserSettingsRepository>();
+builder.Services.AddSingleton<IEquipmentRepository, EquipmentRepository>();
 
 // Register services
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
