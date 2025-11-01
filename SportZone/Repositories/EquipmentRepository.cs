@@ -9,8 +9,10 @@ public class EquipmentRepository : IEquipmentRepository
 {
     private readonly IMongoCollection<Equipment> _equipment;
 
-    public EquipmentRepository(IMongoDatabase database)
+    public EquipmentRepository(IOptions<MongoDbSettings> settings)
     {
+        var client = new MongoClient(settings.Value.ConnectionString);
+        var database = client.GetDatabase(settings.Value.DatabaseName);
         _equipment = database.GetCollection<Equipment>("equipment");
 
         // Create indexes
