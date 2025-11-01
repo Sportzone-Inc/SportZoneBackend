@@ -9,10 +9,8 @@ public class EquipmentRepository : IEquipmentRepository
 {
     private readonly IMongoCollection<Equipment> _equipment;
 
-    public EquipmentRepository(IOptions<MongoDbSettings> settings)
+    public EquipmentRepository(IMongoDatabase database)
     {
-        var client = new MongoClient(settings.Value.ConnectionString);
-        var database = client.GetDatabase(settings.Value.DatabaseName);
         _equipment = database.GetCollection<Equipment>("equipment");
 
         // Create indexes
@@ -30,8 +28,6 @@ public class EquipmentRepository : IEquipmentRepository
 
     public async Task<Equipment> CreateAsync(Equipment equipment)
     {
-        equipment.CreatedAt = DateTime.UtcNow;
-        equipment.UpdatedAt = DateTime.UtcNow;
         await _equipment.InsertOneAsync(equipment);
         return equipment;
     }
