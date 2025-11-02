@@ -67,14 +67,14 @@ public class EquipmentRepository : IEquipmentRepository
 
     public async Task<IEnumerable<Equipment>> GetAvailableForRentAsync()
     {
-        return await _equipment.Find(e => e.AvailableForRent && e.IsActive)
+        return await _equipment.Find(e => e.AvailableForRent && e.IsActive && e.Quantity > 0)
             .SortByDescending(e => e.CreatedAt)
             .ToListAsync();
     }
 
     public async Task<IEnumerable<Equipment>> GetAvailableForSaleAsync()
     {
-        return await _equipment.Find(e => e.AvailableForSale && e.IsActive)
+        return await _equipment.Find(e => e.AvailableForSale && e.IsActive && e.Quantity > 0)
             .SortByDescending(e => e.CreatedAt)
             .ToListAsync();
     }
