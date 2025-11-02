@@ -37,6 +37,7 @@ builder.Services.AddSingleton<IMessageRepository, MessageRepository>();
 builder.Services.AddSingleton<INotificationRepository, NotificationRepository>();
 builder.Services.AddSingleton<IReviewRepository, ReviewRepository>();
 builder.Services.AddSingleton<IUserSettingsRepository, UserSettingsRepository>();
+builder.Services.AddSingleton<IEquipmentRepository, EquipmentRepository>();
 
 // Register services
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();

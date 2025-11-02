@@ -1,0 +1,686 @@
+// SportZone Backend Complete Database Structure (MongoDB)
+// Based on Miro Architecture Diagrams - UPDATED WITH EQUIPMENT TABLE
+
+// ============================================================
+// CORE ENTITIES
+// ============================================================
+
+Table users {
+  _id ObjectId [primary key, note: 'MongoDB ObjectId']
+  username varchar [unique]
+  email varchar [not null, unique]
+  password varchar [not null, note: 'Hashed password']
+  firstName varchar
+  lastName varchar
+  name varchar [not null]
+  profileImage varchar [note: 'URL to profile image']
+  bio text
+  phoneNumber varchar
+  dateOfBirth date
+  gender varchar [note: 'Enum: Male, Female, Other, PreferNotToSay']
+  location varchar
+  latitude double
+  longitude double
+  preferredSport varchar
+  skillLevel varchar [note: 'Enum: Beginner, Intermediate, Advanced, Expert']
+  isActive boolean [default: true]
+  isVerified boolean [default: false]
+  lastLoginAt timestamp
+  createdAt timestamp [default: `now()`]
+  updatedAt timestamp [default: `now()`]
+  
+  Indexes {
+    email [unique]
+    username [unique]
+    location
+  }
+  
+  Note: 'User accounts for SportZone platform'
+}
+
+Table sports {
+  _id ObjectId [primary key, note: 'MongoDB ObjectId']
+  name varchar [not null]
+  type varchar [not null, note: 'Enum: Basketball, Running, Football, Tennis, etc.']
+  category varchar [note: 'Team, Individual, Water, Combat, etc.']
+  description text
+  iconUrl varchar
+  location varchar
+  radiusKm double
+  createdBy ObjectId
+  isActive boolean [default: true]
+  createdAt timestamp [default: `now()`]
+  updatedAt timestamp [default: `now()`]
+  
+  Indexes {
+    type
+    category
+  }
+  
+  Note: 'Sport types and configurations'
+}
+
+Table sport_activities {
+  _id ObjectId [primary key, note: 'MongoDB ObjectId']
+  uniqueId varchar [not null, unique, note: 'GUID for external references']
+  name varchar [not null]
+  description text
+  sportType varchar [not null, note: 'Enum: Basketball, Running, etc.']
+  category varchar
+  
+  // Location data
+  location varchar
+  address varchar
+  city varchar
+  country varchar
+  latitude double
+  longitude double
+  radiusKm double
+  
+  // Scheduling
+  scheduledDate timestamp
+  startTime timestamp
+  endTime timestamp
+  duration integer [note: 'Duration in minutes']
+  
+  // Participants
+  maxParticipants integer
+  minParticipants integer [default: 1]
+  currentParticipants integer [default: 0]
+  participants json [note: 'Array of user ObjectIds']
+  waitlist json [note: 'Array of user ObjectIds on waitlist']
+  
+  // Activity details
+  skillLevelRequired varchar [note: 'Enum: Any, Beginner, Intermediate, Advanced']
+  ageRestriction varchar [note: 'e.g., 18+, All ages']
+  costPerPerson decimal [default: 0]
+  currency varchar [default: 'USD']
+  equipmentProvided boolean [default: false]
+  equipmentNeeded text
+  
+  // Status and visibility
+  status varchar [note: 'Enum: Draft, Published, InProgress, Completed, Cancelled']
+  isActive boolean [default: true]
+  isPublic boolean [default: true]
+  isFeatured boolean [default: false]
+  
+  // Creator and organizer
+  createdBy ObjectId [not null]
+  organizerId ObjectId
+  
+  // Metadata
+  views integer [default: 0]
+  tags json [note: 'Array of tags']
+  imageUrls json [note: 'Array of image URLs']
+  
+  createdAt timestamp [default: `now()`]
+  updatedAt timestamp [default: `now()`]
+  
+  Indexes {
+    sportType
+    status
+    scheduledDate
+    location
+    (latitude, longitude) [name: 'geo_index']
+  }
+  
+  Note: 'Scheduled sport activities and events'
+}
+
+// ============================================================
+// EQUIPMENT MANAGEMENT
+// ============================================================
+
+Table equipment {
+  _id ObjectId [primary key, note: 'MongoDB ObjectId']
+  name varchar [not null]
+  type varchar [not null, note: 'Enum: Ball, Racket, Bat, Glove, Shoes, Clothing, ProtectiveGear, Net, Goal, Mat, Weights, CardioEquipment, TrainingAid, Accessories, Other']
+  category varchar [note: 'Enum: Sports, Fitness, Training, Safety, Accessories, Maintenance, Other']
+  description text
+  imageUrl varchar
+  brand varchar
+  model varchar
+  sku varchar [note: 'Stock Keeping Unit']
+  
+  // Inventory
+  quantity integer [default: 1]
+  condition varchar [note: 'Enum: New, Excellent, Good, Fair, Poor, NeedsRepair']
+  
+  // Pricing
+  purchasePrice decimal
+  rentalPricePerDay decimal
+  currency varchar [default: 'USD']
+  
+  // Ownership and location
+  ownerId ObjectId [note: 'User who owns the equipment']
+  locationId ObjectId [note: 'Physical location/facility reference']
+  
+  // Availability
+  availableForRent boolean [default: false]
+  availableForSale boolean [default: false]
+  isActive boolean [default: true]
+  
+  // Maintenance
+  maintenanceDate timestamp
+  purchaseDate timestamp
+  
+  // Metadata
+  tags json [note: 'Array of tags for searchability']
+  specifications json [note: 'Key-value pairs for technical specs']
+  
+  createdAt timestamp [default: `now()`]
+  updatedAt timestamp [default: `now()`]
+  
+  Indexes {
+    type
+    ownerId
+    locationId
+    availableForRent
+    availableForSale
+  }
+  
+  Note: 'Sports equipment inventory and rental management'
+}
+
+// ============================================================
+// SOCIAL FEATURES
+// ============================================================
+
+Table follows {
+  _id ObjectId [primary key]
+  followerId ObjectId [not null, note: 'User who is following']
+  followingId ObjectId [not null, note: 'User being followed']
+  createdAt timestamp [default: `now()`]
+  
+  Indexes {
+    (followerId, followingId) [unique]
+    followerId
+    followingId
+  }
+  
+  Note: 'User follow relationships'
+}
+
+Table posts {
+  _id ObjectId [primary key]
+  userId ObjectId [not null]
+  activityId ObjectId [note: 'Optional reference to activity']
+  
+  // Content
+  title varchar
+  body text [not null]
+  postType varchar [note: 'Enum: Text, Image, Video, Activity, Achievement']
+  
+  // Media
+  mediaUrls json [note: 'Array of image/video URLs']
+  thumbnailUrl varchar
+  
+  // Engagement
+  likes json [note: 'Array of user ObjectIds who liked']
+  likesCount integer [default: 0]
+  commentsCount integer [default: 0]
+  sharesCount integer [default: 0]
+  
+  // Visibility
+  visibility varchar [default: 'public', note: 'Enum: public, friends, private']
+  isActive boolean [default: true]
+  isPinned boolean [default: false]
+  
+  // Metadata
+  tags json [note: 'Array of hashtags']
+  location varchar
+  latitude double
+  longitude double
+  
+  createdAt timestamp [default: `now()`]
+  updatedAt timestamp [default: `now()`]
+  
+  Indexes {
+    userId
+    activityId
+    createdAt
+  }
+  
+  Note: 'User posts and updates'
+}
+
+Table comments {
+  _id ObjectId [primary key]
+  postId ObjectId [not null]
+  userId ObjectId [not null]
+  parentCommentId ObjectId [note: 'For nested replies']
+  
+  body text [not null]
+  
+  // Engagement
+  likes json [note: 'Array of user ObjectIds who liked']
+  likesCount integer [default: 0]
+  
+  isActive boolean [default: true]
+  isEdited boolean [default: false]
+  
+  createdAt timestamp [default: `now()`]
+  updatedAt timestamp [default: `now()`]
+  
+  Indexes {
+    postId
+    userId
+    parentCommentId
+  }
+  
+  Note: 'Comments on posts'
+}
+
+// ============================================================
+// ACTIVITY INTERACTIONS
+// ============================================================
+
+Table activity_participants {
+  _id ObjectId [primary key]
+  activityId ObjectId [not null]
+  userId ObjectId [not null]
+  
+  status varchar [not null, note: 'Enum: Interested, Joined, Attended, Cancelled, NoShow']
+  role varchar [note: 'Enum: Participant, Organizer, CoOrganizer']
+  
+  joinedAt timestamp [default: `now()`]
+  cancelledAt timestamp
+  attendanceMarkedAt timestamp
+  
+  // Participant details
+  notes text
+  rating integer [note: '1-5 rating after activity']
+  review text
+  
+  createdAt timestamp [default: `now()`]
+  updatedAt timestamp [default: `now()`]
+  
+  Indexes {
+    (activityId, userId) [unique]
+    activityId
+    userId
+    status
+  }
+  
+  Note: 'User participation in activities'
+}
+
+Table activity_invitations {
+  _id ObjectId [primary key]
+  activityId ObjectId [not null]
+  senderId ObjectId [not null]
+  receiverId ObjectId [not null]
+  
+  status varchar [default: 'pending', note: 'Enum: pending, accepted, declined, expired']
+  message text
+  
+  sentAt timestamp [default: `now()`]
+  respondedAt timestamp
+  expiresAt timestamp
+  
+  Indexes {
+    (activityId, receiverId) [unique]
+    receiverId
+    status
+  }
+  
+  Note: 'Invitations to join activities'
+}
+
+// ============================================================
+// MESSAGING
+// ============================================================
+
+Table conversations {
+  _id ObjectId [primary key]
+  participants json [not null, note: 'Array of user ObjectIds']
+  conversationType varchar [note: 'Enum: Direct, Group, Activity']
+  activityId ObjectId
+  
+  name varchar [note: 'For group chats']
+  imageUrl varchar
+  
+  lastMessageId ObjectId
+  lastMessageAt timestamp
+  
+  isActive boolean [default: true]
+  
+  createdBy ObjectId
+  createdAt timestamp [default: `now()`]
+  updatedAt timestamp [default: `now()`]
+  
+  Indexes {
+    participants
+    lastMessageAt
+  }
+  
+  Note: 'Chat conversations'
+}
+
+Table messages {
+  _id ObjectId [primary key]
+  conversationId ObjectId [not null]
+  senderId ObjectId [not null]
+  
+  messageType varchar [note: 'Enum: Text, Image, Video, Location, Activity, System']
+  content text
+  mediaUrl varchar
+  
+  // Activity reference
+  activityId ObjectId
+  
+  // Read receipts
+  readBy json [note: 'Array of {userId, readAt} objects']
+  
+  isEdited boolean [default: false]
+  isDeleted boolean [default: false]
+  
+  createdAt timestamp [default: `now()`]
+  updatedAt timestamp [default: `now()`]
+  
+  Indexes {
+    conversationId
+    senderId
+    createdAt
+  }
+  
+  Note: 'Chat messages'
+}
+
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+
+Table notifications {
+  _id ObjectId [primary key]
+  userId ObjectId [not null]
+  
+  notificationType varchar [not null, note: 'Enum: Follow, Like, Comment, ActivityInvite, ActivityReminder, Message, etc.']
+  title varchar [not null]
+  body text
+  
+  // References
+  senderId ObjectId
+  activityId ObjectId
+  postId ObjectId
+  commentId ObjectId
+  
+  // Navigation
+  actionUrl varchar
+  deepLink varchar
+  
+  // Status
+  isRead boolean [default: false]
+  readAt timestamp
+  isSent boolean [default: false]
+  sentAt timestamp
+  
+  createdAt timestamp [default: `now()`]
+  
+  Indexes {
+    userId
+    isRead
+    createdAt 
+  }
+  
+  Note: 'User notifications'
+}
+
+// ============================================================
+// REVIEWS & RATINGS
+// ============================================================
+
+Table reviews {
+  _id ObjectId [primary key]
+  reviewType varchar [note: 'Enum: Activity, User']
+  
+  // References
+  activityId ObjectId
+  reviewerId ObjectId [not null]
+  revieweeId ObjectId [note: 'For user reviews']
+  
+  rating integer [not null, note: '1-5 star rating']
+  title varchar
+  comment text
+  
+  // Helpful votes
+  helpfulCount integer [default: 0]
+  helpfulVotes json [note: 'Array of user ObjectIds']
+  
+  isVerified boolean [default: false, note: 'Verified attendance']
+  isActive boolean [default: true]
+  
+  response text [note: 'Organizer response']
+  respondedAt timestamp
+  
+  createdAt timestamp [default: `now()`]
+  updatedAt timestamp [default: `now()`]
+  
+  Indexes {
+    activityId
+    reviewerId
+    revieweeId
+    rating
+  }
+  
+  Note: 'Reviews and ratings for activities and users'
+}
+
+// ============================================================
+// USER PREFERENCES & SETTINGS
+// ============================================================
+
+Table user_settings {
+  _id ObjectId [primary key]
+  userId ObjectId [not null, unique]
+  
+  // Notification preferences
+  emailNotifications boolean [default: true]
+  pushNotifications boolean [default: true]
+  smsNotifications boolean [default: false]
+  
+  // Notification types
+  notifyOnFollow boolean [default: true]
+  notifyOnLike boolean [default: true]
+  notifyOnComment boolean [default: true]
+  notifyOnInvite boolean [default: true]
+  notifyOnMessage boolean [default: true]
+  notifyOnActivityReminder boolean [default: true]
+  
+  // Privacy
+  profileVisibility varchar [default: 'public', note: 'Enum: public, friends, private']
+  showLocation boolean [default: true]
+  showEmail boolean [default: false]
+  showPhoneNumber boolean [default: false]
+  
+  // Activity preferences
+  preferredSports json [note: 'Array of sport types']
+  maxDistance integer [default: 50, note: 'in km']
+  preferredDays json [note: 'Array of day names']
+  preferredTimes json [note: 'Array of time ranges']
+  
+  // App preferences
+  language varchar [default: 'en']
+  theme varchar [default: 'light', note: 'Enum: light, dark, auto']
+  measurementUnit varchar [default: 'metric', note: 'Enum: metric, imperial']
+  
+  createdAt timestamp [default: `now()`]
+  updatedAt timestamp [default: `now()`]
+  
+  Note: 'User preferences and settings'
+}
+
+// ============================================================
+// ACHIEVEMENTS & GAMIFICATION
+// ============================================================
+
+Table achievements {
+  _id ObjectId [primary key]
+  name varchar [not null]
+  description text
+  category varchar [note: 'Enum: Participation, Social, Skills, Milestones']
+  
+  iconUrl varchar
+  badgeUrl varchar
+  
+  criteria json [note: 'Achievement criteria']
+  points integer [default: 0]
+  rarity varchar [note: 'Enum: Common, Rare, Epic, Legendary']
+  
+  isActive boolean [default: true]
+  
+  createdAt timestamp [default: `now()`]
+  
+  Note: 'Available achievements'
+}
+
+Table user_achievements {
+  _id ObjectId [primary key]
+  userId ObjectId [not null]
+  achievementId ObjectId [not null]
+  
+  progress integer [default: 0]
+  isUnlocked boolean [default: false]
+  unlockedAt timestamp
+  
+  Indexes {
+    (userId, achievementId) [unique]
+    userId
+  }
+  
+  Note: 'User achievement progress'
+}
+
+// ============================================================
+// REPORTS & MODERATION
+// ============================================================
+
+Table reports {
+  _id ObjectId [primary key]
+  reporterId ObjectId [not null]
+  
+  reportType varchar [not null, note: 'Enum: User, Activity, Post, Comment']
+  
+  // References
+  reportedUserId ObjectId
+  reportedActivityId ObjectId
+  reportedPostId ObjectId
+  reportedCommentId ObjectId
+  
+  reason varchar [not null, note: 'Enum: Spam, Inappropriate, Harassment, Fake, Other']
+  description text
+  
+  status varchar [default: 'pending', note: 'Enum: pending, reviewing, resolved, dismissed']
+  
+  reviewedBy ObjectId
+  reviewedAt timestamp
+  resolution text
+  
+  createdAt timestamp [default: `now()`]
+  updatedAt timestamp [default: `now()`]
+  
+  Indexes {
+    status
+    reportType
+    createdAt 
+  }
+  
+  Note: 'User reports for moderation'
+}
+
+// ============================================================
+// ANALYTICS & TRACKING
+// ============================================================
+
+Table user_activity_logs {
+  _id ObjectId [primary key]
+  userId ObjectId
+  
+  activityType varchar [note: 'Enum: Login, ProfileView, ActivityView, Search, etc.']
+  
+  // References
+  targetUserId ObjectId
+  targetActivityId ObjectId
+  
+  metadata json [note: 'Additional context data']
+  
+  ipAddress varchar
+  userAgent varchar
+  deviceType varchar
+  
+  createdAt timestamp [default: `now()`]
+  
+  Indexes {
+    userId
+    activityType
+    createdAt 
+  }
+  
+  Note: 'User activity tracking for analytics'
+}
+
+// ============================================================
+// RELATIONSHIPS
+// ============================================================
+
+// User relationships
+Ref: sports.createdBy > users._id
+Ref: sport_activities.createdBy > users._id
+Ref: sport_activities.organizerId > users._id
+Ref: follows.followerId > users._id
+Ref: follows.followingId > users._id
+
+// Equipment relationships
+Ref: equipment.ownerId > users._id
+
+// Post relationships
+Ref: posts.userId > users._id
+Ref: posts.activityId > sport_activities._id
+Ref: comments.postId > posts._id
+Ref: comments.userId > users._id
+Ref: comments.parentCommentId > comments._id
+
+// Activity interactions
+Ref: activity_participants.activityId > sport_activities._id
+Ref: activity_participants.userId > users._id
+Ref: activity_invitations.activityId > sport_activities._id
+Ref: activity_invitations.senderId > users._id
+Ref: activity_invitations.receiverId > users._id
+
+// Messaging
+Ref: conversations.activityId > sport_activities._id
+Ref: conversations.createdBy > users._id
+Ref: conversations.lastMessageId > messages._id
+Ref: messages.conversationId > conversations._id
+Ref: messages.senderId > users._id
+Ref: messages.activityId > sport_activities._id
+
+// Notifications
+Ref: notifications.userId > users._id
+Ref: notifications.senderId > users._id
+Ref: notifications.activityId > sport_activities._id
+Ref: notifications.postId > posts._id
+Ref: notifications.commentId > comments._id
+
+// Reviews
+Ref: reviews.activityId > sport_activities._id
+Ref: reviews.reviewerId > users._id
+Ref: reviews.revieweeId > users._id
+
+// Settings & Achievements
+Ref: user_settings.userId - users._id
+Ref: user_achievements.userId > users._id
+Ref: user_achievements.achievementId > achievements._id
+
+// Reports
+Ref: reports.reporterId > users._id
+Ref: reports.reportedUserId > users._id
+Ref: reports.reportedActivityId > sport_activities._id
+Ref: reports.reportedPostId > posts._id
+Ref: reports.reportedCommentId > comments._id
+Ref: reports.reviewedBy > users._id
+
+// Analytics
+Ref: user_activity_logs.userId > users._id
+Ref: user_activity_logs.targetUserId > users._id
+Ref: user_activity_logs.targetActivityId > sport_activities._id
