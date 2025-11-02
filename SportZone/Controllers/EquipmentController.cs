@@ -116,7 +116,7 @@ public class EquipmentController : ControllerBase
     }
 
     /// <summary>
-    /// Get equipment by owner ID
+    /// Get equipment by owner
     /// </summary>
     [HttpGet("owner/{ownerId}")]
     public async Task<ActionResult<IEnumerable<EquipmentResponseDto>>> GetEquipmentByOwner(string ownerId)
@@ -130,6 +130,29 @@ public class EquipmentController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting equipment by owner");
+            return StatusCode(500, "An error occurred");
+        }
+    }
+
+    /// <summary>
+    /// Get my equipment
+    /// </summary>
+    [HttpGet("my-equipment")]
+    public async Task<ActionResult<IEnumerable<EquipmentResponseDto>>> GetMyEquipment()
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("User not authenticated");
+
+            var equipment = await _equipmentRepository.GetByOwnerIdAsync(userId);
+            var response = equipment.Select(MapToResponseDto);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting my equipment");
             return StatusCode(500, "An error occurred");
         }
     }
@@ -154,7 +177,7 @@ public class EquipmentController : ControllerBase
     }
 
     /// <summary>
-    /// Get equipment by location ID
+    /// Get equipment by location
     /// </summary>
     [HttpGet("location/{locationId}")]
     public async Task<ActionResult<IEnumerable<EquipmentResponseDto>>> GetEquipmentByLocation(string locationId)
